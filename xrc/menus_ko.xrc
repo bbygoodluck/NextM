@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<resource xmlns="http://www.wxwindows.org/wxxrc" version="2.3.0.1">
+	<object class="wxMenuBar" name="NextMMenu">
+		<label></label>
+		<object class="wxMenu" name="m_menuFile">
+			<label>파일(_F)</label>
+			<object class="wxMenuItem" name="m_fMenu_Execute">
+				<label>실행</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_fMenu_NewTab">
+				<label>새탭</label>
+				<accel>Ctrl+T</accel>
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenuItem" name="m_fMenu_Copy">
+				<label>복사\tAlt+C</label>
+				<bitmap stock_id = "wxART_COPY" />
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_fMenu_Move">
+				<label>이동\tAlt+M</label>
+				<bitmap stock_id = "wxART_CUT" />
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenuItem" name="m_fMenu_Rename">
+				<label>이름변경</label>
+				<accel>F2</accel>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_fMenu_MakeFolder">
+				<label>폴더생성</label>
+				<bitmap stock_id = "wxART_NEW_DIR" />
+				<accel>F7</accel>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_fMenu_FileEdit">
+				<label>파일편집</label>
+				<bitmap stock_id = "wxART_EDIT" />
+				<accel>F3</accel>
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenuItem" name="m_fMenu_goTrash">
+				<label>휴지통으로...</label>
+				<accel>Del</accel>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_fMenu_goDel">
+				<label>영구삭제</label>
+				<accel>Shift+Del</accel>
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenuItem" name="m_fMenu_CMD">
+				<label>명령창 실행</label>
+				<bitmap>..\\img\\DosExecute.png</bitmap>
+				<accel>/</accel>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_fMenu_Exit">
+				<label>프로그램종료</label>
+				<bitmap stock_id = "wxART_QUIT" />
+				<accel>Alt+F4</accel>
+				<help></help>
+			</object>
+		</object>
+		<object class="wxMenu" name="m_menuEdit">
+			<label>편집(_E)</label>
+			<object class="wxMenuItem" name="m_eMenu_Release">
+				<label>선택해제</label>
+				<accel>Ctrl+R</accel>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_eMenu_SelAll">
+				<label>전체선택</label>
+				<accel>Ctrl+A</accel>
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenuItem" name="m_eMenu_Copy">
+				<label>복사하기</label>
+				<bitmap stock_id = "wxART_COPY" />
+				<accel>Ctrl+C</accel>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_eMenu_Cut">
+				<label>잘라내기</label>
+				<bitmap stock_id = "wxART_CUT" />
+				<accel>Ctrl+X</accel>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_eMenu_Paste">
+				<label>붙여넣기</label>
+				<bitmap stock_id = "wxART_PASTE" />
+				<accel>Ctrl+V</accel>
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenuItem" name="m_eMenu_Search">
+				<label>파일찾기</label>
+				<bitmap stock_id = "wxART_FIND"/>
+				<accel>Ctrl+F</accel>
+				<help></help>
+			</object>
+			<!--
+			<object class="wxMenuItem" name="m_eMenu_Next_Sel">
+				<label>다음선택</label>
+				<accel>Ctrl+N</accel>
+				<help></help>
+			</object>
+			-->
+			<object class="separator" />
+			<object class="wxMenuItem" name="m_eMenu_ContextMenu">
+				<label>컨택스트메뉴</label>
+				<accel>Ctrl+M</accel>
+				<help></help>
+			</object>
+		</object>
+		<object class="wxMenu" name="m_menuPath">
+			<label>경로(_P)</label>
+			<object class="wxMenuItem" name="m_pMenu_PathMng">
+				<label>폴더관리</label>
+				<bitmap>..\\img\\mcd.png</bitmap>
+				<accel>F10</accel>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_pMenu_Refresh">
+				<label>새로고침</label>
+				<bitmap>..\\img\\refresh.png</bitmap>
+				<accel>F5</accel>
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenuItem" name="m_pMenu_GotoDirDirectly">
+				<label>폴더 직접이동</label>
+				<accel>Ctrl+Shift+G</accel>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_pMenu_Root">
+				<label>루트로</label>
+				<bitmap stock_id = "wxART_GOTO_FIRST" />
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_pMenu_Goup">
+				<label>위로</label>
+				<accel>.</accel>
+				<bitmap stock_id = "wxART_GO_UP" />
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_pMenu_Godown">
+				<label>하위로</label>
+				<bitmap stock_id = "wxART_GO_DOWN" />
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_pMenu_Back">
+				<label>뒤로</label>
+				<accel>[</accel>
+				<bitmap stock_id="wxART_GO_BACK" />
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_pMenu_foward">
+				<label>앞으로</label>
+				<accel>]</accel>
+				<bitmap stock_id="wxART_GO_FORWARD" />
+				<help></help>
+			</object>
+		</object>
+		<object class="wxMenu" name="m_menuComp">
+			<label>압축(_A)</label>
+			<object class="wxMenuItem" name="m_menuComp_View">
+				<label>압축파일 보기</label>
+				<accel>Ctrl+Alt+V</accel>
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenuItem" name="m_menuComp_Progress">
+				<label>압축하기</label>
+				<accel>F8</accel>
+				<help></help>
+			</object>
+			<!--
+			<object class="wxMenu" name="m_menuCompSub">
+				<label>압축하기</label>
+				<object class="wxMenuItem" name="m_menuComp_DoCompZip">
+						<label>Zip으로 압축하기</label>
+						<accel>Ctrl+Z</accel>
+						<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_menuComp_DoComp7Zip">
+					<label>7z으로 압축하기</label>
+					<accel>Ctrl+Shift+Z</accel>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_menuComp_PassCompZip">
+					<label>암호 설정후 Zip으로...</label>
+					<accel>Ctrl+P+Z</accel>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_menuComp_PassComp7z">
+					<label>암호 설정후 7z으로...</label>
+					<accel>Shift+P+Z</accel>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_menuComp_PassCompCustom">
+					<label>Customize....</label>
+					<help></help>
+				</object>
+				<object class="separator" />
+				<object class="wxMenuItem" name="m_menuComp_CompAndDel">
+					<label>압축후 삭제</label>
+					<accel>Alt+Z</accel>
+					<help></help>
+				</object>
+			</object>
+			-->
+			<object class="wxMenu" name="m_menuComp_ReleaseSub">
+				<label>압축해제</label>
+				<object class="wxMenuItem" name="m_menuComp_CurrentDirCompRelease">
+					<label>현재폴더에 압축해제</label>
+					<accel>Alt+X</accel>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_menuComp_MakeDirCompRelease">
+					<label>폴더생성 후 압축해제</label>
+					<accel>Alt+D</accel>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_menuComp_SelDirCompRelease">
+					<label>폴더선택 후 압축해제</label>
+					<accel>Alt+Shift+D</accel>
+					<help></help>
+				</object>
+			</object>
+		</object>
+		<object class="wxMenu" name="m_menuView">
+			<label>보기(_V)</label>
+			<object class="wxMenuItem" name="m_viewMenu_FullScr">
+				<label>전체화면보기</label>
+				<bitmap stock_id = "wxART_FULL_SCREEN" />
+				<accel>F12</accel>
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenu" name="m_viewSubWindow">
+				<label>윈도우</label>
+				<object class="wxMenuItem" name="m_viewMenu_Window_0">
+					<label>단일창</label>
+					<accel>Alt+S</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Window_1">
+					<label>수직창</label>
+					<accel>Alt+V</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Window_2">
+					<label>수평창</label>
+					<accel>Alt+H</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+			</object>
+			<object class="wxMenuItem" name="m_viewMenu_ToolBar">
+				<label>툴바</label>
+				<checkable>1</checkable>
+				<help></help>
+			</object>
+			<!--
+			<object class="wxMenuItem" name="m_viewMenu_Favorite">
+				<label>즐겨찾기</label>
+				<checkable>1</checkable>
+				<help></help>
+			</object>
+			-->
+			<object class="wxMenuItem" name="m_viewMenu_ShortCut">
+				<label>단축키표시바</label>
+				<checkable>1</checkable>
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenu" name="m_viewSubColumn">
+				<label>열보기</label>
+				<object class="wxMenuItem" name="m_viewMenu_Column_0">
+					<label>자동컬럼</label>
+					<accel>Alt+0</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="separator" />
+				<object class="wxMenuItem" name="m_viewMenu_Column_1">
+					<label>1열로 보기</label>
+					<accel>Alt+1</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Column_2">
+					<label>2열로 보기</label>
+					<accel>Alt+2</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Column_3">
+					<label>3열로 보기</label>
+					<accel>Alt+3</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Column_4">
+					<label>4열로 보기</label>
+					<accel>Alt+4</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Column_5">
+					<label>5열로 보기</label>
+					<accel>Alt+5</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Column_6">
+					<label>6열로 보기</label>
+					<accel>Alt+6</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Column_7">
+					<label>7열로 보기</label>
+					<accel>Alt+7</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Column_8">
+					<label>8열로 보기</label>
+					<accel>Alt+8</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Column_9">
+					<label>9열로 보기</label>
+					<accel>Alt+9</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+			</object>
+			<object class="wxMenu" name="m_viewSubFile">
+				<label>파일보기</label>
+				<object class="wxMenuItem" name="m_viewMenu_DefaultFile">
+					<label>기본파일 보기(Default)</label>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_HiddenFile">
+					<label>숨김파일 보기</label>
+					<accel>Ctrl+F1</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<!--
+				<object class="wxMenuItem" name="m_viewMenu_SystemFile">
+					<label>시스템파일 보기</label>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				-->
+				<object class="separator" />
+				<object class="wxMenuItem" name="m_viewMenu_AllFile">
+					<label>모든파일 보기</label>
+					<accel>Alt+F1</accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<!--
+				<object class="wxMenuItem" name="m_viewMenu_exeFile">
+					<label>프로그램파일만</label>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_CompFiles">
+					<label>압축파일만</label>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_Custom">
+					<label>사용자정의</label>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				-->
+			</object>
+			<object class="wxMenu" name="m_viewSort">
+				<label>정렬</label>
+				<object class="wxMenuItem" name="m_viewMenu_SortName">
+					<label>이름순(Default)</label>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="wxMenuItem" name="m_viewMenu_SortTime">
+					<label>날짜순(내림차순)</label>
+					<accel></accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+				<object class="separator" />
+				<object class="wxMenuItem" name="m_viewMenu_SortSize">
+					<label>크기순(내림차순)</label>
+					<accel></accel>
+					<checkable>1</checkable>
+					<help></help>
+				</object>
+			</object>
+			<object class="wxMenuItem" name="m_viewMenu_SubDir">
+				<label>하위폴더보기</label>
+				<checkable></checkable>
+				<accel>Ctrl+Shift+D</accel>
+				<help></help>
+			</object>
+			<object class="separator" />
+			<object class="wxMenuItem" name="m_viewMenu_DirNumber">
+				<label>디렉토리 Numbering</label>
+				<checkable>1</checkable>
+				<accel>Ctrl+L</accel>
+			</object>
+		</object>
+		<object class="wxMenu" name="m_menuFavorite">
+			<label>즐겨찾기</label>
+			<object class="wxMenuItem" name="m_favoriteMenu_Add">
+				<label>즐겨찾기 추가</label>
+				<bitmap stock_id = "wxART_ADD_BOOKMARK"/>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_favoriteMenu_Manager">
+				<label>즐겨찾기 관리</label>
+				<help></help>
+			</object>
+		</object>
+		<object class="wxMenu" name="m_menuSystem">
+			<label>시스템</label>
+			<object class="wxMenuItem" name="m_SystemMenu_Resource">
+				<label>자원사용량</label>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_toolSystem_DiskSize">
+				<label>디스크사용량</label>
+				<help></help>
+			</object>
+		</object>
+		<object class="wxMenu" name="m_menuTool">
+			<label>도구(_T)</label>
+			<object class="wxMenuItem" name="m_toolMenu_ENV">
+				<label>환경설정</label>
+				<bitmap>..\\img\\environment.png</bitmap>
+				<accel>Ctrl+F11</accel>
+				<help></help>
+			</object>
+			<object class="wxMenuItem" name="m_toolMenu_CurSave">
+				<label>현재상태저장</label>
+				<accel>Ctrl+S</accel>
+				<help></help>
+			</object>
+		</object>
+		<object class="wxMenu" name="m_menuHelp">
+			<label>도움말(_H)</label>
+			<!--
+			<object class="wxMenuItem" name="m_helpMenu_Shortcut">
+				<label>단축키</label>
+				<accel>F11</accel>
+				<help></help>
+			</object>
+			<object class="separator" />
+			-->
+			<object class="wxMenuItem" name="m_helpMenu_thisProgram">
+				<label>이 프로그램은...</label>
+				<bitmap stock_id = "wxART_HELP_PAGE" />
+				<help></help>
+			</object>
+		</object>
+	</object>
+</resource>

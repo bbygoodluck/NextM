@@ -1,0 +1,30 @@
+/* XPM */
+static const char *DosExecute[] = {
+/* columns rows colors chars-per-pixel */
+"16 17 7 1",
+"  c #000000",
+". c #687991",
+"X c #8F9297",
+"o c #A0A0A4",
+"O c #CACCCD",
+"+ c #D3D9E0",
+"@ c #FFFFFF",
+/* pixels */
+"oooooooooooooooo",
+"oooooooooooooooo",
+"XXXXXXXXXXXXXXXX",
+"X+++++++++.+.+.X",
+"XOOOOOOOOOOOOOOX",
+"X              X",
+"X              X",
+"X  @@    @     X",
+"X @  @ @ @     X",
+"X @      @@    X",
+"X @  @ @  @    X",
+"X  @@     @ @@ X",
+"X              X",
+"X              X",
+"XXXXXXXXXXXXXXXX",
+"oooooooooooooooo",
+"oooooooooooooooo"
+};

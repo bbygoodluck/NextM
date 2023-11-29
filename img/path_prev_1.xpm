@@ -1,0 +1,33 @@
+/* XPM */
+static char *path_prev__[] = {
+/* columns rows colors chars-per-pixel */
+"16 17 10 1",
+"  c #000000",
+". c #111111",
+"X c #333333",
+"o c #A0A0A4",
+"O c #C0C0C0",
+"+ c #CCCCCC",
+"@ c #DDDDDD",
+"# c #E3E3E3",
+"$ c #EAEAEA",
+"% c #F1F1F1",
+/* pixels */
+"OOOOOOOOOOOOOOOO",
+"OOOOOO++OOOOO++O",
+"OOOOO+..+OOO+..+",
+"OOOO+.  oOO+.  o",
+"OOO+.  oOO+.  oO",
+"OO+.  oOO+.  oOO",
+"O+.  oOO+.  oOOO",
+"#.  oOO@.  oOOOO",
+"$X  oOO$X  oOOOO",
+"O$X  oOO$X  oOOO",
+"OO$X  oOO%X  oOO",
+"OOO$X  oOO$X  oO",
+"OOOO$X  oOO$X  o",
+"OOOOO$X.+OOO$X.+",
+"OOOOOO%+OOOOO%+O",
+"OOOOOOOOOOOOOOOO",
+"OOOOOOOOOOOOOOOO"
+};
