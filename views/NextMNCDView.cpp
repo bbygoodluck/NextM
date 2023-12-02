@@ -372,7 +372,7 @@ void CNextMNCDView::DrawLine(wxDC* pDC, std::vector<DirNode *>::iterator itStart
 		 */
 		if(pDispNode->_parent != nullptr)
 		{
-			while(pDispNode->_depth >= 1)
+			while((pDispNode->_depth - m_iCurDepth) >= 1)
 			{
 				std::vector<DirNode *>::const_iterator cItChBegin = pDispNode->_parent->_childNode.begin();
 				std::vector<DirNode *>::const_iterator cItChEnd   = pDispNode->_parent->_childNode.end();
@@ -489,11 +489,10 @@ void CNextMNCDView::CalcRowInView(wxDC* pDC)
 	const int maxDepth = theNCD->GetMaxDepth();
 	const int maxRow   = theNCD->GetMaxRow();
 
-//	this->SetVirtualSize(m_iNCDSize * DISP_ROW_HEIGHT, maxDepth * m_iDispColsWidth);
-//	this->SetScrollRate(DISP_ROW_HEIGHT, m_iDispColsWidth);
-
 	this->SetScrollbar(wxVERTICAL, 0, 1, maxRow);
-	SetScrollPos(wxVERTICAL, (*m_itIndex)->_row);
+	this->SetScrollPos(wxVERTICAL, (*m_itIndex)->_row);
+	this->SetScrollbar(wxHORIZONTAL, 0, 1, maxDepth);
+	this->SetScrollPos(wxHORIZONTAL, (*m_itIndex)->_depth);
 }
 
 void CNextMNCDView::LoadDirInfo()
@@ -732,8 +731,11 @@ bool CNextMNCDView::MoveLeft()
 		DirNode* pNode = (*m_itIndex);
 		if(pNode->_rc.GetRight() < m_viewDispRect.GetRight())
 		{
-			if(m_iCurDepth > 0)
-				m_iCurDepth--;
+			m_iCurDepth--;
+			if(m_iCurDepth <= 0)
+				m_iCurDepth = 0;
+
+			this->SetScrollPos(wxHORIZONTAL, m_iCurDepth);
 		}
 
 		return true;
@@ -752,7 +754,13 @@ bool CNextMNCDView::MoveRight()
 
 		DirNode* pNode = (*m_itIndex);
 		if(pNode->_rc.GetRight() > m_viewDispRect.GetRight())
+		{
 			m_iCurDepth++;
+			if(m_iCurDepth >= theNCD->GetMaxDepth())
+				m_iCurDepth = theNCD->GetMaxDepth();
+
+			this->SetScrollPos(wxHORIZONTAL, m_iCurDepth);
+		}
 
 		return true;
 	}
@@ -903,7 +911,8 @@ void CNextMNCDView::OnScroll(wxScrollWinEvent& event)
 	}
 	else if (iOrientation == wxHORIZONTAL)
 	{
-
+		ScrollHorzProcess(evtType, iPos);
+		this->SetScrollPos(wxHORIZONTAL, m_iCurDepth);
 	}
 
 	theUtility->RefreshWindow(this, m_viewRect);
@@ -1020,7 +1029,18 @@ void CNextMNCDView::ScrollVerticalProcess(wxEventType evtType, bool bWheel, int 
 
 void CNextMNCDView::ScrollHorzProcess(wxEventType evtType, int iThumbTrackPos)
 {
-
+	if(evtType == wxEVT_SCROLLWIN_LINEDOWN)
+	{
+		m_iCurDepth++;
+		if(m_iCurDepth >= theNCD->GetMaxDepth())
+			m_iCurDepth == theNCD->GetMaxDepth();
+	}
+	else if(evtType == wxEVT_SCROLLWIN_LINEUP)
+	{
+		m_iCurDepth--;
+		if(m_iCurDepth <= 0)
+			m_iCurDepth = 0;
+	}
 }
 
 void CNextMNCDView::FindMatch(const wxString& strKey)

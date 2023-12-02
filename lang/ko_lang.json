@@ -247,7 +247,7 @@
   "MSG_DLG_SCD_DIR_RENAME"                   : "이름변경(F2)",
   "MSG_DLG_SCD_DIR_DEL"                      : "삭제(Del)",
   "MSG_DLG_SCD_DIR_FIND"                     : "찾기(Ctrl + F)",
-  "MSG_DLG_SCD_DIR_FIND_NEXT"                : "다음찾기(Ctrl+N)",
+  "MSG_DLG_SCD_DIR_FIND_NEXT"                : "다음찾기(Ctrl + N)",
   "MSG_DLG_SCD_EXIT"                         : "나가기(ESC)",
   "MSG_DLG_SCD_FIND_DIR_MSG"                 : "찾을 디렉토리 :",
   "MSG_DLG_SCD_FILE_DEL_ERR"                 : " 를 삭제하지 못하였습니다.\n해당위치의 파일존재 여부를 확인하세요!",
