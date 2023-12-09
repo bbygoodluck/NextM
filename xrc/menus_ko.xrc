@@ -145,8 +145,7 @@
 				<help></help>
 			</object>
 			<object class="wxMenuItem" name="m_pMenu_Goup">
-				<label>위로</label>
-				<accel>.</accel>
+				<label>위로\tBackspace(또는 .)</label>
 				<bitmap stock_id = "wxART_GO_UP" />
 				<help></help>
 			</object>

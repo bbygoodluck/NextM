@@ -861,7 +861,7 @@ void CNextMExecuteMenuOperation::HelpMenu_ThisProgram()
 	strBuildInfo = wxString::Format(wxT("%s. \n%s"), strBuildInfo, strDeveloper);
 	// Set build info message. This is optional step. If you don't specify build info message then
 	// default one will be used
-	dlg->SetCustomBuildInfo(wxT("Advanced File Manager ") + strBuildInfo);
+	dlg->SetCustomBuildInfo(wxT("Advanced File Manager with ") + strBuildInfo);
 	// Apply changes
 	dlg->ApplyInfo();
 	// Show dialog

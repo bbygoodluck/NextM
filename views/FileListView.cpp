@@ -484,6 +484,8 @@ bool CFileListView::ProcessKeyEvent(int iKeyCode)
 
 bool CFileListView::ProcessEnterKey(int iKeyCode)
 {
+	std::cout << "ProcessEnterKey" << std::endl;
+
 	std::vector<CNextMDirData>::iterator it = m_itemList.begin() + m_iCurrentItemIndex;
 	wxString strName(it->GetName());
 	wxString strSearchDir(wxT(""));

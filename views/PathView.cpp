@@ -608,6 +608,12 @@ void CPathView::UpdatePath(const wxString& strPath)
 {
 	AddPath(strPath);
 
+	CViewsPanel* parent = (CViewsPanel *)GetParent();
+	CViewsPanel* currPanel = theSplitterManager->GetCurrentViewManager()->GetCurrentViewsPanels();
+
+	if(parent != currPanel)
+		theSplitterManager->ChangeSplitView();
+
 	theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strPath, CHANGE_DIR_FILELISTIVEW);
 	theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strPath, CHANGE_DIR_TAB);
 }
