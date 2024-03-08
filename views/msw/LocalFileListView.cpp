@@ -326,7 +326,9 @@ void CLocalFileListView::OnFileSystemWatcher(wxCommandEvent& event)
 			break;
 
 		case FS_WATCHER_DELETE:
-			DoDelete(pItem);
+			if(!m_bRename)
+				DoDelete(pItem);
+
 			break;
 
 		case FS_WATCHER_RENAME:
@@ -473,11 +475,11 @@ void CLocalFileListView::DoModify(CWatcherItem* pItem)
 		if(iSortType == CFileListView::VIEW_SORT::VIEW_SORT_SIZE)
 			SortStart();
 
-		wxString strVolume = m_strCurrentPath.Left(1);
 	//	SetDiskSpace(strVolume);
-
-		theSplitterManager->MSWUpdateDriveSize(strVolume);
 	}
+
+//	wxString strVolume = m_strCurrentPath.Left(1);
+	theSplitterManager->MSWUpdateDriveSize(m_strVolume);
 }
 
 void CLocalFileListView::DoDelete(CWatcherItem* pItem)
@@ -499,11 +501,11 @@ void CLocalFileListView::DoDelete(CWatcherItem* pItem)
 		m_dblFileSizeInDir -= it->GetSize().ToDouble();
 		m_iFileCount--;
 
-		wxString strVolume = m_strCurrentPath.Left(1);
 	//	SetDiskSpace(strVolume);
-
-		theSplitterManager->MSWUpdateDriveSize(strVolume);
 	}
+
+//	wxString strVolume = m_strCurrentPath.Left(1);
+	theSplitterManager->MSWUpdateDriveSize(m_strVolume);
 
 	m_itemList.erase(it);
 	m_iTotalItems = m_itemList.size();
@@ -525,6 +527,7 @@ void CLocalFileListView::DoDelete(CWatcherItem* pItem)
 
 void CLocalFileListView::DoRename(CWatcherItem* pItem)
 {
+	m_bRename = false;
 	wxString strNewName(pItem->m_strNew);
 	wxString strOldName(pItem->m_strOld);
 

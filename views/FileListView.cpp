@@ -2076,11 +2076,14 @@ void CFileListView::RenameOn(const wxString& strRename)
 void CFileListView::RenameStart(const wxString& strOldPathName, const wxString& strNewPathName)
 {
 	int iResult = wxRename(strOldPathName, strNewPathName);
+
 	if(iResult != 0)
 	{
 		wxString strMsg = wxT("Could not rename ") + strOldPathName + wxT(" to ") + strNewPathName;
 		theUtility->ShowMessageBox(strMsg, wxICON_ERROR | wxOK);
 	}
+
+	m_bRename = true;
 }
 
 void CFileListView::OnEnterTextCtrl(wxCommandEvent& event)
