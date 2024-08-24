@@ -326,9 +326,7 @@ void CLocalFileListView::OnFileSystemWatcher(wxCommandEvent& event)
 			break;
 
 		case FS_WATCHER_DELETE:
-			if(!m_bRename)
-				DoDelete(pItem);
-
+			DoDelete(pItem);
 			break;
 
 		case FS_WATCHER_RENAME:
@@ -347,13 +345,6 @@ void CLocalFileListView::DoCreate(CWatcherItem* pItem)
 	wxString strName(pItem->m_strNew);
 	wxString strFullPath = theUtility->MakeFullPathName(m_strCurrentPath, strName);
 
-	//파일의 상태값을 가져온다.
-//	if(!CLocalFileSystem::GetStat(strFullPath))
-//		return;
-
-	if(!CLocalFileSystem::IsFileWritePermission(strFullPath))
-		return;
-
 	bool isDir = false;
 	unsigned long lattr = 0;
 	wxLongLong llSize(0);
@@ -361,61 +352,67 @@ void CLocalFileListView::DoCreate(CWatcherItem* pItem)
 	wxString strExt(wxT(""));
 	wxString strDesc(wxT(""));
 
-	//속성읽기
-	if(!CLocalFileSystem::GetAttribute(strFullPath, &isDir, &lattr, &llSize, &dt))
-		return;
-
-	if (!theConfig->IsViewAllFile())
-	{
-		if(theUtility->IsAllowAttr(lattr))
-			return;
-	}
+	FILE_TYPE ftype = FTYPE_UNKNOWN;
+	ftype = CLocalFileSystem::GetFileType(strFullPath);
 
 	CNextMDirData dirItem;
 	dirItem.SetName(strName);
 	dirItem.SetPath(m_strCurrentPath);
+	dirItem.SetType(CNextMDirData::item_type::file);
 
 	bool bIconSet = false;
-
 	int iIconIndex = 0;
 	int iOverlayIconIndex = 0;
 
-	if (isDir)
+	bool IsAttr = CLocalFileSystem::GetAttribute(strFullPath, &isDir, &lattr, &llSize, &dt);
+
+	if(ftype != FTYPE_UNKNOWN && IsAttr)
 	{
-		dirItem.SetType(CNextMDirData::item_type::dir);
-		m_iDirCount++;
-		strDesc = theMsg->GetMessage(wxT("MSG_DIR_DESCRIPTION"));
-	}
-	else
-	{
-		dirItem.SetType(CNextMDirData::item_type::file);
-
-		strExt = theUtility->GetExt(strName);
-		m_iFileCount++;
-
-		m_dblFileSizeInDir += llSize.ToDouble();
-
-		if(theIconInfo->GetFileIconInfo(strExt, iIconIndex, iOverlayIconIndex, strDesc))
+		if (!theConfig->IsViewAllFile())
 		{
-			dirItem.SetImageIconFlag(true);
-			bIconSet = true;
+			if(theUtility->IsAllowAttr(lattr))
+				return;
 		}
-	}
 
-	if(!bIconSet)
-	{
-		strDesc = theUtility->GetFileDescription(strExt,  strFullPath);
-		theUtility->GetIconIndex(strFullPath, iIconIndex, iOverlayIconIndex);
-	}
+		if (isDir)
+		{
+			dirItem.SetType(CNextMDirData::item_type::dir);
+			m_iDirCount++;
+			strDesc = theMsg->GetMessage(wxT("MSG_DIR_DESCRIPTION"));
+		}
+		else
+		{
+			dirItem.SetType(CNextMDirData::item_type::file);
 
-	dirItem.SetAttribute(lattr);
-	dirItem.SetSize(llSize);
-	dirItem.SetDateTime(dt);
-	dirItem.SetPath(m_strCurrentPath);
-	dirItem.SetIconIndex(iIconIndex, iOverlayIconIndex);
-	dirItem.SetMatch(false);
-	dirItem.SetExt(strExt);
-	dirItem.SetDescription(strDesc);
+			strExt = theUtility->GetExt(strName);
+			m_iFileCount++;
+
+			m_dblFileSizeInDir += llSize.ToDouble();
+
+			if(theIconInfo->GetFileIconInfo(strExt, iIconIndex, iOverlayIconIndex, strDesc))
+			{
+				dirItem.SetImageIconFlag(true);
+				bIconSet = true;
+			}
+		}
+
+		if(!bIconSet)
+		{
+			strDesc = theUtility->GetFileDescription(strExt,  strFullPath);
+			theUtility->GetIconIndex(strFullPath, iIconIndex, iOverlayIconIndex);
+		}
+
+		dirItem.SetIconIndex(iIconIndex, iOverlayIconIndex);
+
+		dirItem.SetAttribute(lattr);
+		dirItem.SetSize(llSize);
+		dirItem.SetDateTime(dt);
+		dirItem.SetPath(m_strCurrentPath);
+
+		dirItem.SetMatch(false);
+		dirItem.SetExt(strExt);
+		dirItem.SetDescription(strDesc);
+	}
 
 	m_itemList.push_back(dirItem);
 	m_iTotalItems = m_itemList.size();
@@ -427,6 +424,93 @@ void CLocalFileListView::DoCreate(CWatcherItem* pItem)
 
 	SortStart();
 	m_bSizeOrColumnChanged = true;
+
+/*	wxString strName(pItem->m_strNew);
+	wxString strFullPath = theUtility->MakeFullPathName(m_strCurrentPath, strName);
+
+	bool isDir = false;
+	unsigned long lattr = 0;
+	wxLongLong llSize(0);
+	wxDateTime dt(0.0);
+	wxString strExt(wxT(""));
+	wxString strDesc(wxT(""));
+
+	FILE_TYPE ftype = FTYPE_UNKNOWN;
+	ftype = CLocalFileSystem::GetFileType(strFullPath);
+
+	if(ftype != FTYPE_UNKNOWN)
+	{
+		CNextMDirData dirItem;
+		dirItem.SetName(strName);
+		dirItem.SetPath(m_strCurrentPath);
+		dirItem.SetType(CNextMDirData::item_type::file);
+		//속성읽기
+		if(!CLocalFileSystem::GetAttribute(strFullPath, &isDir, &lattr, &llSize, &dt))
+			return;
+
+		if (!theConfig->IsViewAllFile())
+		{
+			if(theUtility->IsAllowAttr(lattr))
+				return;
+		}
+
+		bool bIconSet = false;
+
+		int iIconIndex = 0;
+		int iOverlayIconIndex = 0;
+
+		if (isDir)
+		{
+			dirItem.SetType(CNextMDirData::item_type::dir);
+			m_iDirCount++;
+			strDesc = theMsg->GetMessage(wxT("MSG_DIR_DESCRIPTION"));
+		}
+		else
+		{
+			dirItem.SetType(CNextMDirData::item_type::file);
+
+			strExt = theUtility->GetExt(strName);
+			m_iFileCount++;
+
+			m_dblFileSizeInDir += llSize.ToDouble();
+
+			if(theIconInfo->GetFileIconInfo(strExt, iIconIndex, iOverlayIconIndex, strDesc))
+			{
+				dirItem.SetImageIconFlag(true);
+				bIconSet = true;
+			}
+		}
+
+		if(!bIconSet)
+		{
+			strDesc = theUtility->GetFileDescription(strExt,  strFullPath);
+			theUtility->GetIconIndex(strFullPath, iIconIndex, iOverlayIconIndex);
+		}
+
+		dirItem.SetIconIndex(iIconIndex, iOverlayIconIndex);
+
+
+		dirItem.SetAttribute(lattr);
+		dirItem.SetSize(llSize);
+		dirItem.SetDateTime(dt);
+		dirItem.SetPath(m_strCurrentPath);
+
+		dirItem.SetMatch(false);
+		dirItem.SetExt(strExt);
+		dirItem.SetDescription(strDesc);
+
+		m_itemList.push_back(dirItem);
+		m_iTotalItems = m_itemList.size();
+
+		m_strMaxName = theUtility->GetMaxData(this, m_viewFont, strName, m_strMaxName);
+		m_strMaxTypeName = theUtility->GetMaxData(this, m_viewFont, strDesc, m_strMaxTypeName);
+
+		m_iDriveItemIndex++;
+
+		SortStart();
+		m_bSizeOrColumnChanged = true;
+	}
+*/
 }
 
 void CLocalFileListView::DoModify(CWatcherItem* pItem)
@@ -435,57 +519,58 @@ void CLocalFileListView::DoModify(CWatcherItem* pItem)
 	wxString strName(pItem->m_strNew);
 	wxString strFullPath = theUtility->MakeFullPathName(m_strCurrentPath, strName);
 
-	std::vector<CNextMDirData>::iterator it = FindItem(strName);
-	if(it == m_itemList.end())
-		return;
-
-	//파일의 상태값을 가져온다.
-//	if(!CLocalFileSystem::GetStat(strFullPath))
-//		return;
-
-	if(!CLocalFileSystem::IsFileWritePermission(strFullPath))
-		return;
+	FILE_TYPE ftype = FTYPE_UNKNOWN;
+	ftype = CLocalFileSystem::GetFileType(strFullPath);
 
 	bool isDir = false;
 	unsigned long lattr = 0;
 	wxLongLong llSize(0);
 	wxDateTime dt(0.0);
 
-	//속성읽기
-	if(!CLocalFileSystem::GetAttribute(strFullPath, &isDir, &lattr, &llSize, &dt))
-		return;
-
-	if(it->IsFile())
+	bool IsAttr = CLocalFileSystem::GetAttribute(strFullPath, &isDir, &lattr, &llSize, &dt);
+	if(ftype != FTYPE_UNKNOWN && IsAttr)
 	{
-		if(it->GetSize().ToDouble() != 0)
-			m_dblFileSizeInDir -= it->GetSize().ToDouble();
+		std::vector<CNextMDirData>::iterator it = FindItem(strName);
+		if(it == m_itemList.end())
+			return;
 
-		m_dblFileSizeInDir += llSize.ToDouble();
+
+		if (!theConfig->IsViewAllFile())
+		{
+			if(theUtility->IsAllowAttr(lattr))
+				return;
+		}
+
+		if(it->IsFile())
+		{
+			if(it->GetSize().ToDouble() != 0)
+				m_dblFileSizeInDir -= it->GetSize().ToDouble();
+
+			m_dblFileSizeInDir += llSize.ToDouble();
+		}
+
+		it->SetAttribute(lattr);
+		it->SetSize(llSize);
+		it->SetDateTime(dt);
+
+		if(it->IsFile())
+		{
+			m_bWatcherModify = true;
+			int iSortType = theConfig->GetSortType();
+
+			if(iSortType == CFileListView::VIEW_SORT::VIEW_SORT_SIZE)
+				SortStart();
+		}
+
+		theSplitterManager->MSWUpdateDriveSize(m_strVolume);
 	}
-
-	it->SetAttribute(lattr);
-	it->SetSize(llSize);
-	it->SetDateTime(dt);
-
-	if(it->IsFile())
-	{
-		m_bWatcherModify = true;
-		int iSortType = theConfig->GetSortType();
-
-		if(iSortType == CFileListView::VIEW_SORT::VIEW_SORT_SIZE)
-			SortStart();
-
-	//	SetDiskSpace(strVolume);
-	}
-
-//	wxString strVolume = m_strCurrentPath.Left(1);
-	theSplitterManager->MSWUpdateDriveSize(m_strVolume);
 }
 
 void CLocalFileListView::DoDelete(CWatcherItem* pItem)
 {
 	wxString strName(pItem->m_strNew);
 	std::vector<CNextMDirData>::iterator it = FindItem(strName);
+
 	if(it == m_itemList.end())
 		return;
 
@@ -500,12 +585,7 @@ void CLocalFileListView::DoDelete(CWatcherItem* pItem)
 	{
 		m_dblFileSizeInDir -= it->GetSize().ToDouble();
 		m_iFileCount--;
-
-	//	SetDiskSpace(strVolume);
 	}
-
-//	wxString strVolume = m_strCurrentPath.Left(1);
-	theSplitterManager->MSWUpdateDriveSize(m_strVolume);
 
 	m_itemList.erase(it);
 	m_iTotalItems = m_itemList.size();
@@ -523,6 +603,7 @@ void CLocalFileListView::DoDelete(CWatcherItem* pItem)
 	m_iDriveItemIndex--;
 
 	m_bSizeOrColumnChanged = true;
+	theSplitterManager->MSWUpdateDriveSize(m_strVolume);
 }
 
 void CLocalFileListView::DoRename(CWatcherItem* pItem)
@@ -563,6 +644,38 @@ void CLocalFileListView::DoRename(CWatcherItem* pItem)
 
 	SortStart();
 	m_bSizeOrColumnChanged = true;
+/*
+	wxString strNewName(pItem->m_strNew);
+	wxString strOldName(pItem->m_strOld);
+
+	wxString strFullPath = theUtility->MakeFullPathName(m_strCurrentPath, strNewName);
+
+	bool bExist = true;
+	std::vector<CNextMDirData>::iterator it = FindItem(strOldName);
+	if(it == m_itemList.end())
+		return;
+
+	FILE_TYPE ftype = FTYPE_UNKNOWN;
+	ftype = CLocalFileSystem::GetFileType(strFullPath);
+	if(ftype == FTYPE_UNKNOWN)
+		return;
+
+	CWatcherItem* pWatcherItem = new CWatcherItem();
+	pWatcherItem->m_strNew = pItem->m_strOld;
+
+	DoDelete(pWatcherItem);
+	wxDELETE(pWatcherItem);
+
+	if(it->IsFile())
+	{
+		bool IsExist = wxFileExists(strFullPath);
+		if(IsExist)
+			return;
+	}
+
+	DoCreate(pItem);
+	m_bSizeOrColumnChanged = true;
+*/
 }
 
 void CLocalFileListView::OnUpdateDriveSizeInfo(wxCommandEvent& event)

@@ -10,6 +10,7 @@ wxEND_EVENT_TABLE()
 CNextMTooltipView::CNextMTooltipView(wxWindow* pParent)
 	: wxWindow(pParent, wxID_ANY, wxDefaultPosition, wxDefaultSize, CHILD_WINDOW_STYLE)
 {
+	SetBackgroundStyle(wxBG_STYLE_CUSTOM);
 #ifdef __WXMSW__
 	m_toolTipFont.Create(10, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, _T("Tahoma"));
 #else

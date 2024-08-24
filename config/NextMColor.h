@@ -29,9 +29,11 @@ public:
 	const wxColour GetInfoViewTextColor() { return m_infoviewtxtColor; }
 	const wxColour GetMatchColor()        { return m_matchColor; }
 
+	void SetColors();
+	void SetChangeColorVal(const wxString& strKey, const wxString& strMember, const wxString& strVal);
 
 private:
-	void SetColors();
+
 	unsigned long ConvertStrToColor(wxString& strColor);
 
 private:

@@ -93,6 +93,10 @@ public:
 	//문자변환(wchar to char)
 	const char* ConvertWC2MB(const wxString& strData);
 
+#ifndef NDEBUG
+	void LogDisplay(const wxString& strMsg);
+#endif
+
 private:
 	void SetWorkingDirectory();
 	void Init();

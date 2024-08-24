@@ -21,6 +21,7 @@ public:
 	bool IsViewHiddenFile()			const  { return (_jsonDoc["globalsettings"]["DispHiddenFile"].GetInt() == 1 ? true : false); }
 	bool IsViewAllFile()			const  { return (_jsonDoc["globalsettings"]["DispAllFile"].GetInt() == 1 ? true : false); }
 
+	const int GetPreIconReadCount() const  { return _jsonDoc["globalsettings"]["preIconRead"].GetInt();}
 	const int GetWidth()            const  { return _jsonDoc["globalsettings"]["Width"].GetInt();}
 	const int GetHeight()			const  { return _jsonDoc["globalsettings"]["Height"].GetInt();}
 	const int GetXPos()				const  { return _jsonDoc["globalsettings"]["XPos"].GetInt();}
@@ -74,11 +75,10 @@ public:
 	const int GetUseWindowShellFileOperation() const { return _jsonDoc["globalsettings"]["UseWindowShell"].GetInt(); }
 	const wxString GetColorTheme() const             { return _jsonDoc["globalsettings"]["color"].GetString(); }
 
-	void SaveConfig();
+//	void SaveConfig();
 
 	void SetChangeGlobalVal(const wxString& strMember, int iVal);
 	void SetChangeGlobalVal(const wxString& strMember, const wxString& strVal);
-	void SetChangeColorVal(const wxString& strKey, const wxString& strMember, const wxString& strVal);
 
 private:
 	static std::unique_ptr<CNextMConfig> m_pInstance;

@@ -620,3 +620,15 @@ void CUtility::ShowMessageBox(const wxString& strMsg, int iRetCode)
 {
 	wxMessageBox(strMsg, PROGRAM_FULL_NAME, iRetCode);
 }
+
+
+#ifndef NDEBUG
+void CUtility::LogDisplay(const wxString& strMsg)
+{
+#if defined(_UNICODE) || defined(UNICODE)
+	std::wcout << strMsg << std::endl;
+#else
+	std::cout << strMsg << std::endl;
+#endif
+}
+#endif

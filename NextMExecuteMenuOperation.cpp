@@ -9,6 +9,7 @@
 #include "./dialog/DlgFavoriteManager.h"
 #include "./dialog/DlgDirManager.h"
 #include "./dialog/GenericDirDialog.h"
+#include "./dialog/DlgEnv.h"
 #include "./dialog/wxMozillaLikeAboutBoxDialog.h"
 #include "./dialog/header_png.h"
 
@@ -768,6 +769,9 @@ void CNextMExecuteMenuOperation::SystemMenu_DiskUsage()
 //도구메뉴
 void CNextMExecuteMenuOperation::ToolMenu_Setting()
 {
+	DlgEnv dlg(_gMainFrame);
+	dlg.ShowModal();
+	dlg.Destroy();
 }
 
 void CNextMExecuteMenuOperation::ToolMenu_SaveSetting()
@@ -832,7 +836,7 @@ void CNextMExecuteMenuOperation::ToolMenu_SaveSetting()
 		}
 	}
 
-	theConfig->SaveConfig();
+	theConfig->SaveDoc();
 	theUtility->ShowMessageBox(theMsg->GetMessage(wxT("MSG_ENV_CONFIG_SAVE")), wxOK | wxICON_INFORMATION);
 }
 //이프로그램은..

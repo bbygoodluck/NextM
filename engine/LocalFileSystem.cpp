@@ -1,5 +1,6 @@
 #include "../ginc.h"
 #include "LocalFileSystem.h"
+#include <io.h>
 
 static wxInt64 EPOCH_OFFSET_IN_MSEC = wxLL(11644473600000);
 
@@ -366,4 +367,114 @@ bool CLocalFileSystem::CheckCreatable(const wxString& strFilePathName)
 	}
 
 	return true;
+}
+
+enum FILE_TYPE CLocalFileSystem::GetFileType(const wxString& path)
+{
+#ifdef __WXMSW__
+	DWORD result = GetFileAttributes(path);
+	if (result == INVALID_FILE_ATTRIBUTES)
+		return FTYPE_UNKNOWN;
+
+//	WIN32_FILE_ATTRIBUTE_DATA fileAttr = { 0, };
+//	BOOL result = GetFileAttributesEx(path, GetFileExInfoStandard, &fileAttr);
+
+	if (result == INVALID_FILE_ATTRIBUTES)
+		return FTYPE_UNKNOWN;
+
+
+	const unsigned long attrubute_mapping[][2] = {
+		{ FILE_ATTRIBUTE_DIRECTORY,			FTYPE_DIR     },
+		{ FILE_ATTRIBUTE_REPARSE_POINT,		FTYPE_LINK    },
+		{ FILE_ATTRIBUTE_READONLY,          FTYPE_FILE    },
+		{ FILE_ATTRIBUTE_HIDDEN,            FTYPE_FILE    },
+		{ FILE_ATTRIBUTE_SYSTEM,            FTYPE_FILE    }
+	};
+
+	for (unsigned long i = 0; i < WXSIZEOF(attrubute_mapping); ++i)
+	{
+		if (result & attrubute_mapping[i][0])
+			return attrubute_mapping[i][1];
+	}
+	/*
+	if (result & FILE_ATTRIBUTE_DIRECTORY)
+		return FTYPE_DIR;
+
+
+
+	if (result & FILE_ATTRIBUTE_REPARSE_POINT)
+		return FTYPE_LINK;
+	*/
+/*
+	const HANDLE h = ::CreateFile( path.t_str() ,
+                                   0,
+                                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                   NULL,
+                                   OPEN_EXISTING,
+                                   result & FILE_ATTRIBUTE_DIRECTORY ? FILE_FLAG_BACKUP_SEMANTICS : FILE_ATTRIBUTE_NORMAL,
+                                   NULL);
+
+    if ( h != INVALID_HANDLE_VALUE )
+	{
+        CloseHandle(h);
+        return FTYPE_FILE;
+	}
+*/
+	int nExist;
+	int nAccess;
+
+#ifdef _UNICODE
+	nExist = _waccess(path.wchar_str(), 0);
+	nAccess = _waccess(path.wchar_str(), 2);
+
+	if(nExist == -1)
+		return FTYPE_UNKNOWN;
+
+	if(nExist == 0)
+	{
+		if(nAccess == -1)
+			return FTYPE_UNKNOWN;
+
+		return FTYPE_FILE;
+	}
+#else
+	nExist = _assess(path.c_str(), 0);
+	nAccess = _assess(path.c_str(), 2);
+
+	if(nExist != -1)
+		return FTYPE_UNKNOWN;
+
+	if(nExist)
+	{
+		if(nAccess == -1)
+			return FTYPE_UNKNOWN;
+
+		return FTYPE_FILE;
+	}
+#endif
+
+	return FTYPE_UNKNOWN;
+#else
+	if (path.Last() == '/' && path != _T("/"))
+	{
+		wxString tmp = path;
+		tmp.RemoveLast();
+		return GetFileType(tmp);
+	}
+
+	wxStructStat buf;
+	int result = wxLstat(path, &buf);
+	if (result)
+		return FTYPE_UNKNOWN;
+
+#ifdef S_ISLNK
+	if (S_ISLNK(buf.st_mode))
+		return FTYPE_LINK;
+#endif
+
+	if (S_ISDIR(buf.st_mode))
+		return FTYPE_DIR;
+
+	return FTYPE_FILE;
+#endif
 }

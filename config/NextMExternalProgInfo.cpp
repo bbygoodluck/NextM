@@ -19,7 +19,7 @@ CExternalProgInfo::~CExternalProgInfo()
 
 CExternalProgInfo* CExternalProgInfo::Get()
 {
-	if (m_pInstance.get() == NULL)
+	if (m_pInstance.get() == nullptr)
 		m_pInstance.reset(new CExternalProgInfo());
 
 	return m_pInstance.get();
@@ -59,6 +59,56 @@ void CExternalProgInfo::SetExternalProgramItems()
 	}
 }
 
+//복사
+void CExternalProgInfo::ResetExternalProgram(const std::vector<CExternalProgItem>& exItems)
+{
+	ClearExternalItems();
+	std::copy(exItems.begin(), exItems.end(), std::back_inserter(m_external));
+
+	CreateExternalMenuList();
+	UpdateDocument();
+}
+
+void CExternalProgInfo::AddExternalProgram(const CExternalProgItem& exItem)
+{
+	m_external.emplace_back(exItem);
+	CreateExternalMenuList();
+
+	UpdateDocument();
+}
+
+void CExternalProgInfo::UpdateDocument()
+{
+	Document::AllocatorType& allocator = _jsonDoc.GetAllocator();
+	Value valExtPGs(kArrayType);
+
+	std::vector<CExternalProgItem>::iterator iterItemStart = BeginIter();
+	std::vector<CExternalProgItem>::iterator iterItemEnd = EndIter();
+
+	while(iterItemStart != iterItemEnd)
+	{
+		CExternalProgItem exPg = *iterItemStart;
+
+		Value item;
+		item.SetObject();
+
+		Value _name(exPg._strPGName.c_str(), allocator);
+		Value _path(exPg._strPGPath.c_str(), allocator);
+		Value _args(exPg._strPGArgs.c_str(), allocator);
+
+		item.AddMember("name", _name, allocator);
+		item.AddMember("path", _path, allocator);
+		item.AddMember("args", _args, allocator);
+
+		valExtPGs.PushBack(item, allocator);
+
+		iterItemStart++;
+	}
+
+	if(GetExternalProgCount() > 0)
+		_jsonDoc["externalEdit"] = valExtPGs;
+}
+
 void CExternalProgInfo::CreateExternalMenuList()
 {
 	wxBitmap bmpExternalPG = wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_OTHER, wxSize(16, 16));
@@ -69,6 +119,10 @@ void CExternalProgInfo::CreateExternalMenuList()
 	int iIndex = 0;
 	while(cItBegin != cItEnd)
 	{
+		wxMenuItem* pFindItem = m_menu.FindItem(EXTERNAL_PROGRAM_START_ID + iIndex);
+		if(pFindItem != nullptr)
+			m_menu.Remove(EXTERNAL_PROGRAM_START_ID + iIndex);
+
 		wxMenuItem* pMenuItem = m_menu.Append(EXTERNAL_PROGRAM_START_ID + iIndex, cItBegin->_strPGName);
 
 		int iIconIndex;
@@ -101,17 +155,4 @@ void CExternalProgInfo::CreateExternalMenuList()
 		cItBegin++;
 		iIndex++;
 	}
-}
-
-void CExternalProgInfo::SaveConfig()
-{
-	wxString strOutJson(_strJsonPath);
-	std::ofstream ofs;
-
-	ofs.open(strOutJson.char_str());
-
-	OStreamWrapper osw(ofs);
-	PrettyWriter<OStreamWrapper> writer(osw);
-
-	_jsonDoc.Accept(writer);
 }

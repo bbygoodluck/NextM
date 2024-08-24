@@ -162,6 +162,9 @@ wxThread::ExitCode CLocalFileSystemWatcher::Entry()
 
 			pNotify = (PFILE_NOTIFY_INFORMATION)((LPBYTE)pNotify + dwOffset);
 		} while(dwOffset);
+
+		wxZeroMemory(m_buffer);
+		SecureZeroMemory(&m_PollingOverlap, sizeof(OVERLAPPED));
 	}
 
 	return (wxThread::ExitCode)0;

@@ -156,13 +156,13 @@
 			</object>
 			<object class="wxMenuItem" name="m_pMenu_Back">
 				<label>뒤로</label>
-				<accel>[</accel>
+				<accel></accel>
 				<bitmap stock_id="wxART_GO_BACK" />
 				<help></help>
 			</object>
 			<object class="wxMenuItem" name="m_pMenu_foward">
 				<label>앞으로</label>
-				<accel>]</accel>
+				<accel></accel>
 				<bitmap stock_id="wxART_GO_FORWARD" />
 				<help></help>
 			</object>

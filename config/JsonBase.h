@@ -8,6 +8,10 @@ using namespace rapidjson;
 #include "../rapidjson/ostreamwrapper.h"
 #include "../rapidjson/prettywriter.h"
 
+#include <iostream>
+#include <fstream>
+#include <streambuf>
+
 class CJsonBase
 {
 public:
@@ -16,6 +20,7 @@ public:
 
 	Document& GetJsonDoc() { return _jsonDoc; };
 	virtual bool Load() = 0;
+
 	bool HasMember(const wxString& _strMember, const wxString& _strKey = wxT(""))
 	{
 		if(_strKey.IsEmpty())
@@ -38,6 +43,18 @@ public:
 		return true;
 	}
 
+	void SaveDoc()
+	{
+		wxString strOutJson(_strJsonPath);
+		std::ofstream ofs;
+
+		ofs.open(strOutJson.char_str());
+
+		OStreamWrapper osw(ofs);
+		PrettyWriter<OStreamWrapper> writer(osw);
+
+		_jsonDoc.Accept(writer);
+	}
 protected:
 	bool DoLoad(const wxString& strPath);
 

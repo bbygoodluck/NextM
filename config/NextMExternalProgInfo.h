@@ -20,9 +20,15 @@ public:
 
 public:
 	bool Load() override;
-	void SaveConfig();
+	void ResetExternalProgram(const std::vector<CExternalProgItem>& exItems);
+	void AddExternalProgram(const CExternalProgItem& exItem);
+
+	void ClearExternalItems() {
+		m_external.clear();
+	}
 
 private:
+	void UpdateDocument();
 	void SetExternalProgramItems();
 	void CreateExternalMenuList();
 

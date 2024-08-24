@@ -34,7 +34,7 @@ wxEND_EVENT_TABLE()
 CFileListView::CFileListView(wxWindow* parent, const int nID, const wxSize& sz)
     : wxWindow(parent, nID, wxDefaultPosition, sz, FILELISTVIEW_STYLE)
 {
-//	SetBackgroundStyle(wxBG_STYLE_CUSTOM);
+	SetBackgroundStyle(wxBG_STYLE_CUSTOM);
 
 	//상위폴더 이동 이미지
 	m_icoUpDir = wxArtProvider::GetIcon(wxART_GO_DIR_UP, wxART_OTHER, wxSize(16, 16));
@@ -76,7 +76,7 @@ CFileListView::CFileListView(wxWindow* parent, const int nID, const wxSize& sz)
 	//이름변경 컨트롤
 	m_pTxtCtrlForRename = std::make_unique<wxTextCtrl>(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER | wxBORDER_THEME);
 	m_pTxtCtrlForRename->SetBackgroundColour(wxColour(220, 220, 220));
-	m_pTxtCtrlForRename->SetBackgroundStyle(wxBG_STYLE_PAINT);
+
 	m_pTxtCtrlForRename->SetFont(m_viewFont);
 	m_pTxtCtrlForRename->Show(false);
 
@@ -94,6 +94,10 @@ CFileListView::~CFileListView()
 	std::vector<CNextMDirData>().swap(m_itemList);
 	std::vector<CColumnPoint>().swap(m_ptList);
 	std::vector<CPositionInfo>().swap(m_posList);
+
+	m_pTxtCtrlForRename->Disconnect(wxEVT_KEY_DOWN, wxKeyEventHandler(CFileListView::OnKeyDownTextCtrl), NULL, this);
+	m_pTxtCtrlForRename->Disconnect(wxEVT_COMMAND_TEXT_ENTER, wxCommandEventHandler(CFileListView::OnEnterTextCtrl), NULL, this);
+	m_pTxtCtrlForRename->Disconnect(wxEVT_KILL_FOCUS, wxFocusEventHandler(CFileListView::OnKillFocusTxtCtrl), NULL, this);
 }
 
 void CFileListView::Clear()
@@ -185,6 +189,15 @@ void CFileListView::OnErase(wxEraseEvent& event)
 
 void CFileListView::OnCharHook(wxKeyEvent& event)
 {
+	int iKeyCode = event.GetKeyCode();
+/*
+	if(m_bRename || (!m_strKeyInput.IsEmpty() && iKeyCode == 46))
+	{
+		event.Skip();
+		wxPostEvent(m_pTxtCtrlForRename.get(), event);
+		return;
+	}
+*/
 	bool bControlDown = wxIsCtrlDown();
 	bool bAltDown     = wxIsAltDown();
 	bool bShiftDown   = wxIsShiftDown();
@@ -713,7 +726,7 @@ void CFileListView::DisplayRenameTooltip(const wxString& strMsg, int xPos, int y
 	wxSize sztip = dc.GetTextExtent(strMsg);
 	wxSize szTooltip;
 
-	szTooltip.SetWidth(sztip.GetWidth() + 10);
+	szTooltip.SetWidth(sztip.GetWidth() + (sztip.GetWidth() * 0.3));
 	szTooltip.SetHeight(sztip.GetHeight() + 5);
 
 	m_pRenameTooltip->SetTooltipText(strMsg);
@@ -1994,8 +2007,8 @@ std::vector<CNextMDirData>::iterator CFileListView::FindItem(const wxString& str
 		return (strSrc.Cmp(strTgt) == 0);
 	});
 
-	if (it == m_itemList.end())
-		return m_itemList.end();
+//	if (it == m_itemList.end())
+//		return m_itemList.end();
 
 	return it;
 }

@@ -236,7 +236,7 @@ void CNextMNCDView::DisplayNCD(wxDC* pDC)
 
 		//row의 시작은 0이므로 row + 1을 해야 화면에 디렉토리 tree가 표시됨
 		//그렇지 않으면 드라이브만 표시됨
-		if( (iRow  + 1) % m_iRowInView == 0)
+		if( (iRow + 1) % m_iRowInView == 0)
 		{
 			if(pNode->_childNode.size() == 0)
 				break;

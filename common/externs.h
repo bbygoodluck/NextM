@@ -36,5 +36,4 @@ extern std::unordered_map<int, int> _gmapAllowProcessKey;
 
 //메뉴이벤트처리
 extern CNextMMenuEvent* _gMenuEvent;
-
 #endif // EXTERNS_H_INCLUDED

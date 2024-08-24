@@ -180,21 +180,7 @@ void CNextMConfig::SetChangeGlobalVal(const wxString& strMember, const wxString&
 	_jsonDoc["globalsettings"][_Key] = _Val;
 }
 
-void CNextMConfig::SetChangeColorVal(const wxString& strKey, const wxString& strMember, const wxString& strVal)
-{
-	if (!HasMember(strKey))
-		return;
-
-	if (!HasMember(strMember, strKey))
-		return;
-
-	Value _Key(strKey.c_str(), _jsonDoc.GetAllocator());
-	Value _Member(strMember.c_str(), _jsonDoc.GetAllocator());
-	Value _Val(strVal.c_str(), _jsonDoc.GetAllocator());
-
-	_jsonDoc[_Key][_Member] = _Val;
-}
-
+/*
 void CNextMConfig::SaveConfig()
 {
 	wxString strOutJson(_strJsonPath);
@@ -207,3 +193,4 @@ void CNextMConfig::SaveConfig()
 
 	_jsonDoc.Accept(writer);
 }
+*/

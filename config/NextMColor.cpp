@@ -107,3 +107,18 @@ unsigned long CNextMColor::ConvertStrToColor(wxString& strColor)
 
 	return lvalue;
 }
+
+void CNextMColor::SetChangeColorVal(const wxString& strKey, const wxString& strMember, const wxString& strVal)
+{
+	if (!HasMember(strKey))
+		return;
+
+	if (!HasMember(strMember, strKey))
+		return;
+
+	Value _Key(strKey.c_str(), _jsonDoc.GetAllocator());
+	Value _Member(strMember.c_str(), _jsonDoc.GetAllocator());
+	Value _Val(strVal.c_str(), _jsonDoc.GetAllocator());
+
+	_jsonDoc[_Key][_Member] = _Val;
+}
