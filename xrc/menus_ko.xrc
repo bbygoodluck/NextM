@@ -420,7 +420,7 @@
 			</object>
 			<object class="separator" />
 			<object class="wxMenuItem" name="m_viewMenu_DirNumber">
-				<label>디렉토리 Numbering</label>
+				<label>디렉토리 번호</label>
 				<checkable>1</checkable>
 				<accel>Ctrl+L</accel>
 			</object>

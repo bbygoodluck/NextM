@@ -29,3 +29,9 @@ wxDEFINE_EVENT(wxEVT_CHANGE_VIEW_COLUMN, wxCommandEvent);
 
 //정렬방식 변경
 wxDEFINE_EVENT(wxEVT_CHANGE_VIEW_SORT, wxCommandEvent);
+
+//상태바 즐겨찾기 클릭
+wxDEFINE_EVENT(wxEVT_VIEW_FAVORITE_FROM_STATUS, wxCommandEvent);
+
+//디렉토리 번호 표시(디렉토리 이동시 사용)
+wxDEFINE_EVENT(wxEVT_VIEW_DIR_NUM, wxCommandEvent);

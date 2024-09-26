@@ -136,7 +136,7 @@ protected:
 	wxString CalcStrEllipse(wxDC* pDC, const wxString& strSrc, bool IsDrive);
 
 	//화면 디렉토리 넘버링
-	bool IsShowDirectoryNumbering() const { return m_bDirectoryNumbering; }
+	bool IsShowDirectoryNumber() const { return m_bDirectoryNumbering; }
 
 	//마우스이벤트 처리
 	void DoMouseProcess(const wxPoint& pt, bool bDblClick = false);
@@ -239,14 +239,14 @@ protected:
 	// 쓰레드 시작플래그
 	bool m_bFileImageInfoReadStarted = false;
 
-	//디렉토리 번호 표시
-	bool m_bDirectoryNumbering  = false;
-
 	//마우스 클릭&아이템찾기
 	bool m_bMouseClickItemFound = false;
 
 	//이름변경 준비
 	bool m_bRename = false;
+
+	//디렉토리 번호 표시 플래그
+	bool m_bDirectoryNumbering  = false;
 
 #ifdef __WXMSW__
 	bool m_bImeMode = false;
@@ -374,6 +374,12 @@ protected:
 	void OnChangeViewColumn(wxCommandEvent& event);
 	//Sorting
 	void OnChangeSorting(wxCommandEvent& event);
+
+	//상태바 즐겨찾기 클릭
+	void OnShowFavoriteFromStatus(wxCommandEvent& event);
+
+	//디렉토리 번호 표시
+	void OnShowDirectoryNumber(wxCommandEvent& event);
 	wxDECLARE_EVENT_TABLE();
 };
 

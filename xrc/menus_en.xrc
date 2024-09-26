@@ -425,7 +425,7 @@
 				<help></help>
 			</object>
 			<object class="wxMenuItem" name="m_viewMenu_DirNumber">
-				<label>Dir Numbering</label>
+				<label>Show Dir Number</label>
 				<checkable>1</checkable>
 				<accel>Ctrl+L</accel>
 			</object>

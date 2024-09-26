@@ -2,6 +2,7 @@
 #include "NextMFrame.h"
 #include "NextMSplitterWnd.h"
 #include "NextMStatusBar.h"
+#include "NextMNewStatusBar.h"
 
 #ifdef __WXMSW__
 	static const GUID usb_hid = { 0xA5DCBF10L, 0x6530, 0x11D2, {0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED} };
@@ -29,8 +30,12 @@ CNextMFrame::CNextMFrame(wxFrame *frame, const wxString& strTitle)
 	//메뉴바 등록
 	SetMenuBar(pMenuBar);
 	//상태바등록
-	m_pStatusBar = std::make_unique<CNextMStatusBar>(this);
-	SetStatusBar(m_pStatusBar.get());
+//	m_pStatusBar = std::make_unique<CNextMStatusBar>(this);
+//	SetStatusBar(m_pStatusBar.get());
+
+	m_pStatusBarNew = std::make_unique<CNextMNewStatusBar>(this, wxID_ANY);
+//	m_pStatusBarNew->Create(this);
+
 
 	Initialize();
 	CreateToolBar();
@@ -39,6 +44,7 @@ CNextMFrame::CNextMFrame(wxFrame *frame, const wxString& strTitle)
 
 	m_mgr.SetManagedWindow(this);
 	m_mgr.AddPane(theSplitterManager->GetSplitterWnd(), wxAuiPaneInfo().CenterPane().PaneBorder(false));
+	m_mgr.AddPane(m_pStatusBarNew.get(), wxAuiPaneInfo().CenterPane().Bottom().DockFixed().CaptionVisible(false).CloseButton(false).PaneBorder(false));
 	m_mgr.Update();
 
 	m_bInitialized = true;

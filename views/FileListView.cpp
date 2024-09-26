@@ -29,6 +29,8 @@ wxBEGIN_EVENT_TABLE(CFileListView, wxWindow)
 	EVT_MY_CUSTOM_COMMAND(wxEVT_EXEC_MENU_OPERATION, wxID_ANY, CFileListView::OnPathMenuOperation)
 	EVT_MY_CUSTOM_COMMAND(wxEVT_CHANGE_VIEW_COLUMN, wxID_ANY, CFileListView::OnChangeViewColumn)
 	EVT_MY_CUSTOM_COMMAND(wxEVT_CHANGE_VIEW_SORT, wxID_ANY, CFileListView::OnChangeSorting)
+	EVT_MY_CUSTOM_COMMAND(wxEVT_VIEW_FAVORITE_FROM_STATUS, wxID_ANY, CFileListView::OnShowFavoriteFromStatus)
+	EVT_MY_CUSTOM_COMMAND(wxEVT_VIEW_DIR_NUM, wxID_ANY, CFileListView::OnShowDirectoryNumber)
 wxEND_EVENT_TABLE()
 
 CFileListView::CFileListView(wxWindow* parent, const int nID, const wxSize& sz)
@@ -128,6 +130,9 @@ void CFileListView::Initialize()
 
 	//디렉토리 Load 플래그
 	m_bDirLoaded = false;
+
+	//디렉토리 번호 표시 플래그
+	m_bDirectoryNumbering = false;
 
 	//아이템 전체수
 	m_iTotalItems = 0;
@@ -245,8 +250,8 @@ void CFileListView::PreTranslateKeyEvent(wxKeyEvent& event)
 
 		if(m_bDirectoryNumbering)
 		{
-//			wxCommandEvent evt(wxEVT_VIEW_DIR_NUM);
-//			wxPostEvent(this, evt);
+			wxCommandEvent evt(wxEVT_VIEW_DIR_NUM);
+			wxPostEvent(this, evt);
 		}
 
 		return;
@@ -1508,6 +1513,11 @@ void CFileListView::DisplayItems(wxDC* pDC)
 			nDirNumY2 = posInfo.m_nameRect.GetBottom();
 
 			wxRect rcDirNum(wxPoint(nDirNumX1, nDirNumY1), wxPoint(nDirNumX2, nDirNumY2));
+			wxRect rcDirNumShadow(wxPoint(nDirNumX1 + 1, nDirNumY1 + 1), wxPoint(nDirNumX2 + 1, nDirNumY2 + 1));
+
+			pDC->SetTextForeground(wxColour(128, 128, 128));
+			pDC->DrawLabel(strDirNum, rcDirNumShadow, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
+
 			pDC->SetTextForeground(wxColour(255, 255, 0));
 			pDC->DrawLabel(strDirNum, rcDirNum, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
 		}
@@ -2420,5 +2430,16 @@ void CFileListView::OnChangeViewColumn(wxCommandEvent& event)
 void CFileListView::OnChangeSorting(wxCommandEvent& event)
 {
 	SortStart();
+	theUtility->RefreshWindow(this, m_viewRect);
+}
+
+void CFileListView::OnShowFavoriteFromStatus(wxCommandEvent& event)
+{
+	ShowBookmark();
+}
+
+void CFileListView::OnShowDirectoryNumber(wxCommandEvent& event)
+{
+	m_bDirectoryNumbering = !m_bDirectoryNumbering;
 	theUtility->RefreshWindow(this, m_viewRect);
 }

@@ -2,6 +2,7 @@
 #define NEXTMFRAME_H_INCLUDED
 
 class CNextMStatusBar;
+class CNextMNewStatusBar;
 
 class CNextMFrame : public wxFrame
 {
@@ -26,6 +27,7 @@ private:
 
     wxAuiManager	m_mgr;
     std::unique_ptr<CNextMStatusBar> m_pStatusBar;
+    std::unique_ptr<CNextMNewStatusBar> m_pStatusBarNew;
 
     std::unique_ptr<wxAuiToolBar>   m_pAuiToolbar = nullptr;
 	//장치 등록/해제 이벤트 처리

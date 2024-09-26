@@ -393,3 +393,8 @@ void CNextMMenuEvent::OnBackForwardMenuClick(wxCommandEvent& event)
 	int iBackForwardIndex = event.GetId() - wxBACKFORWARD_START;
 	m_pMenuOperation->GotoBackForwardDirectory(iBackForwardIndex);
 }
+
+void CNextMMenuEvent::ExecuteMenu(int nMenuID)
+{
+	DoMenuOperation(nMenuID);
+}

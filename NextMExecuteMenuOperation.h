@@ -13,6 +13,7 @@ public:
 	void SetVisitDirDropDownMenu(wxAuiToolBar* tb, wxAuiToolBarEvent& event);
 	void UpdateBackFowrdMenu(wxUpdateUIEvent& event);
 	void GotoBackForwardDirectory(int iBackForwardIndex);
+	void ShowFavoriteFromStatusBar();
 
 private:
 	void Init();

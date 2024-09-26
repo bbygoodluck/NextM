@@ -721,6 +721,10 @@ void CNextMExecuteMenuOperation::ViewMenu_SubDir()
 
 void CNextMExecuteMenuOperation::ViewMenu_DirNum()
 {
+	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+
+	wxCommandEvent evt(wxEVT_VIEW_DIR_NUM);
+	wxPostEvent(pFileListView, evt);
 }
 //즐겨찾기
 void CNextMExecuteMenuOperation::FavoriteMenu_Add()
@@ -926,4 +930,14 @@ void CNextMExecuteMenuOperation::GotoBackForwardDirectory(int iBackForwardIndex)
 	theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strDirectory, CHANGE_DIR_FILELISTIVEW);
 	theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strDirectory, CHANGE_DIR_TAB);
 	theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strDirectory, CHANGE_DIR_PATHVIEW);
+}
+
+
+void CNextMExecuteMenuOperation::ShowFavoriteFromStatusBar()
+{
+	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+
+	wxCommandEvent evt(wxEVT_VIEW_FAVORITE_FROM_STATUS);
+	wxPostEvent(pFileListView, evt);
+
 }
