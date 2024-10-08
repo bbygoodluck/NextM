@@ -241,6 +241,7 @@ void CNextMNCD::SetCur(const wxString& strPath)
 	// root의 depth가 0 이므로 현재 패스는 size - 1
 	size_t iDepth = vItems.size() - 1;
 
+	bool bCurExist = false;
 	do
 	{
 		DirNode* pNode = *it;
@@ -250,9 +251,13 @@ void CNextMNCD::SetCur(const wxString& strPath)
 		if(IsEqual(pNode, strPathName))
 		{
 			m_pCurNode = it;
+			bCurExist = true;
 			break;
 		}
 	}while(++it != itEnd);
+
+	if(!bCurExist)
+		m_pCurNode = m_nodeDatas.begin();
 }
 
 bool CNextMNCD::IsEqual(DirNode* pNode, const wxString& strPath)

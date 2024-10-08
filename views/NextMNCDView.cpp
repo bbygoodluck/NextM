@@ -498,7 +498,7 @@ void CNextMNCDView::CalcRowInView(wxDC* pDC)
 void CNextMNCDView::LoadDirInfo()
 {
 	m_itStartNode = theNCD->GetCur();
-	m_itIndex   = theNCD->GetCur();
+	m_itIndex   = m_itStartNode;//theNCD->GetCur();
 	m_iNCDSize  = theNCD->GetSize();
 
 	DirNode* pNode = *m_itIndex;
