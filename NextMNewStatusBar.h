@@ -118,7 +118,16 @@ class CNextMNewStatusBar : public wxControl
 	{
 		KEY_DEFAULT = 0,
 		KEY_CTRL,
-		KEY_ALT
+		KEY_ALT,
+		KEY_INPUT_MAX
+	};
+
+	enum _KEY_NUM_CAPS_SHIFT
+	{
+		KEY_NUMLOCKS = 0,
+		KEY_CAPSLOCK,
+		KEY_SHIFT,
+		KEY_NUM_CAPS_SHIFT_MAX
 	};
 public:
 	CNextMNewStatusBar();
@@ -211,8 +220,10 @@ private:
 
 	wxTimer m_timer;
 
-	bool m_bKeyPress[3] = {false, false, false }; //none, ctrl, alt
-	unsigned int m_shapeType = SHAPE_SHADOW_LINE_RAISED;
+	bool m_bKeyPress[KEY_INPUT_MAX] = {false, false, false }; //none, ctrl, alt
+	int m_Num_Caps_Shift[KEY_NUM_CAPS_SHIFT_MAX] = {0, 0, 0};
+
+	unsigned int m_shapeType = SHAPE_LEFT_LINE;
 
 	bool m_bMouseEnter   = false;
 	bool m_bMouseFound   = false;

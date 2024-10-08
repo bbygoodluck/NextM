@@ -46,6 +46,7 @@ public:
 	bool IsCenterOnScreen()                { return _jsonDoc["globalsettings"]["DisplayCenterOnScreen"].GetInt() ? true : false; }
 	bool IsSelectedSCDItemToParent()       { return _jsonDoc["globalsettings"]["SelectSCDItem_toparent"].GetInt() ? true : false; }
 
+	const int GetStatusbarType()    const  { return _jsonDoc["globalsettings"]["StatusbarType"].GetInt(); }
 	wxString GetLeftPath()
 	{
 		wxString strPath = _jsonDoc["globalsettings"]["LeftPath"].GetString();
@@ -89,6 +90,7 @@ private:
 	int m_nHeight;
 	int m_nXPos;
 	int m_nYPos;
+	int m_nStatusbarType = 0;
 	int m_nSplitWindowStyle;
 	int m_nViewToolBar;
 	int m_nSortType;

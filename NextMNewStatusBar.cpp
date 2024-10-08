@@ -39,6 +39,7 @@ CNextMNewStatusBar::CNextMNewStatusBar(wxWindow *parent,
 	: m_spacing(1)
 	, m_timer(this)
 {
+	m_shapeType = theConfig->GetStatusbarType();
 	m_timer.Start(1000);
 #ifdef __WXMSW__
 	m_viewFont.Create(9, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, _T("Segoe UI"));
@@ -261,8 +262,62 @@ void CNextMNewStatusBar::SetStatusText(const wxString& text, int n)
 	if(m_panes.GetCount() == 0)
 		return;
 
+//	if(!m_bSet)
+//		return;
+
 	m_panes[n].SetText(text);
-	if(m_bSet)
+	bool bReturn = false;
+	if(m_bKeyPress[KEY_DEFAULT])
+	{
+		bool bMore = false;
+		switch(n)
+		{
+			case Field_NumLockIndicator:
+			{
+				int numlock_status = wxGetKeyState(WXK_NUMLOCK);
+				if(m_Num_Caps_Shift[KEY_NUMLOCKS] != numlock_status)
+				{
+					bMore = true;
+					m_Num_Caps_Shift[KEY_NUMLOCKS] = numlock_status;
+				}
+
+				bReturn = true;
+			}
+				break;
+
+			case Field_CapsLockIndicator:
+			{
+				int capslock_status = wxGetKeyState(WXK_CAPITAL);
+				if(m_Num_Caps_Shift[KEY_CAPSLOCK] != capslock_status)
+				{
+					bMore = true;
+					m_Num_Caps_Shift[KEY_CAPSLOCK] = capslock_status;
+				}
+
+				bReturn = true;
+			}
+				break;
+			case Field_Shift:
+			{
+				int shift_status = wxGetKeyState(WXK_SHIFT);
+				if(m_Num_Caps_Shift[KEY_SHIFT] != shift_status)
+				{
+					bMore = true;
+					m_Num_Caps_Shift[KEY_SHIFT] = shift_status;
+				}
+
+				bReturn = true;
+			}
+				break;
+			default:
+				break;
+		}
+
+		if(bMore)
+			theUtility->RefreshWindow(this, m_panes[n].GetRect());
+	}
+
+	if(m_bSet && !bReturn)
 		theUtility->RefreshWindow(this, m_panes[n].GetRect());
 }
 
@@ -333,6 +388,10 @@ void CNextMNewStatusBar::InitDefaultInfo(wxDC* pDC)
 {
 	wxString strClick = wxDateTime::Now().FormatTime();
 
+	m_Num_Caps_Shift[KEY_NUMLOCKS] = 0;
+	m_Num_Caps_Shift[KEY_CAPSLOCK] = 0;
+	m_Num_Caps_Shift[KEY_SHIFT] = 0;
+
 	wxSize numLockSize = pDC->GetTextExtent(wxT("NUM"));//numlockIndicators[1]);
 	wxSize capsLock    = pDC->GetTextExtent(wxT("CAPS"));//capslockIndicators[1]);
 	wxSize shiftSize   = pDC->GetTextExtent(wxT("SHIFT"));//shiftIndicators[1]);
@@ -371,9 +430,14 @@ void CNextMNewStatusBar::InitDefaultInfo(wxDC* pDC)
 	SetStatusText(theMsg->GetMessage(wxT("MSG_STATUS_DEFAULT_MAKE_FOLDER")),  Field_F7);
 	SetStatusText(theMsg->GetMessage(wxT("MSG_STATUS_DEFAULT_COMPRESS")),     Field_F8);
 	SetStatusText(theMsg->GetMessage(wxT("MSG_STATUS_DEFAULT_DIRMANAGER")),   Field_F10);
-	SetStatusText(wxT(""),  Field_NumLockIndicator);
-	SetStatusText(wxT(""),  Field_CapsLockIndicator);
-	SetStatusText(wxT(""),  Field_Shift);
+
+	SetStatusText(shiftIndicators[wxGetKeyState(WXK_SHIFT)], Field_Shift);
+	SetStatusText(numlockIndicators[wxGetKeyState(WXK_NUMLOCK)], Field_NumLockIndicator);
+	SetStatusText(capslockIndicators[wxGetKeyState(WXK_CAPITAL)],Field_CapsLockIndicator);
+
+//	SetStatusText(wxT(""),  Field_NumLockIndicator);
+//	SetStatusText(wxT(""),  Field_CapsLockIndicator);
+//	SetStatusText(wxT(""),  Field_Shift);
 	SetStatusText(wxDateTime::Now().FormatTime(), Field_Clock);
 
 	SetStatusTextAlign(Field_NumLockIndicator, wxALIGN_CENTER);
@@ -467,10 +531,10 @@ void CNextMNewStatusBar::UpdateClock()
 
 void CNextMNewStatusBar::OnIdle(wxIdleEvent& event)
 {
-	if(m_bKeyPress[KEY_DEFAULT])
+	if(m_bKeyPress[KEY_DEFAULT] && m_bSet)
 	{
 		SetStatusText(shiftIndicators[wxGetKeyState(WXK_SHIFT)], Field_Shift);
-		SetStatusText(numlockIndicators[wxGetKeyState(WXK_NUMLOCK)],Field_NumLockIndicator);
+		SetStatusText(numlockIndicators[wxGetKeyState(WXK_NUMLOCK)], Field_NumLockIndicator);
 		SetStatusText(capslockIndicators[wxGetKeyState(WXK_CAPITAL)],Field_CapsLockIndicator);
 	}
 
@@ -578,7 +642,6 @@ bool CNextMNewStatusBar::FindItemInMousePoint(const wxPoint& pt)
 	return bFoundOK;
 }
 
-
 void CNextMNewStatusBar::OnMouseLBottonDown(wxMouseEvent& event)
 {
 	if(m_indxMouseOver != -1)
@@ -598,7 +661,6 @@ void CNextMNewStatusBar::OnMouseLBottonDown(wxMouseEvent& event)
 
 	event.Skip();
 }
-
 
 void CNextMNewStatusBar::ExecuteStatusBarClick(const std::unordered_map<int, wxString>& _statusMap, int nIndex)
 {

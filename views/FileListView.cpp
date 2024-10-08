@@ -1507,7 +1507,7 @@ void CFileListView::DisplayItems(wxDC* pDC)
 			int nDirNumX2 = 0;
 			int nDirNumY2 = 0;
 
-			nDirNumX1 = posInfo.m_nameRect.GetRight() - (10 * strDirNum.Len());
+			nDirNumX1 = posInfo.m_nameRect.GetRight() - ((posInfo.m_nameRect.GetWidth() / 2) + (10 * strDirNum.Len()));
 			nDirNumY1 = posInfo.m_nameRect.GetTop();
 			nDirNumX2 = posInfo.m_nameRect.GetRight();
 			nDirNumY2 = posInfo.m_nameRect.GetBottom();
@@ -1518,7 +1518,7 @@ void CFileListView::DisplayItems(wxDC* pDC)
 			pDC->SetTextForeground(wxColour(128, 128, 128));
 			pDC->DrawLabel(strDirNum, rcDirNumShadow, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
 
-			pDC->SetTextForeground(wxColour(255, 255, 0));
+			pDC->SetTextForeground(wxColour(189, 224, 244));
 			pDC->DrawLabel(strDirNum, rcDirNum, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
 		}
 
