@@ -124,6 +124,8 @@ wxThread::ExitCode CNCDInfoThread::Entry()
 	else
 	{
 		wxString strPath = m_pCurrNode->_fullName;
+		theNCD->Clear(m_pCurrNode);
+
 		LoadSubDir(strPath, m_pCurrNode);
 
 		theNCD->SetReOrder(wxT(""));
