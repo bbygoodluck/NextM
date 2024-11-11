@@ -1,15 +1,21 @@
 #include "../../ginc.h"
 #include "NextMDropSource.h"
+#include "NextMDataObject.h"
 
 CNextMDropSource::CNextMDropSource()
-	: m_lRefCount(1)
+	: m_lRefCount(0)
 {
-
+	m_pDragSourceNotify = new CDragSourceNotify();
+	m_pDragSourceNotify->AddRef();
 }
 
 CNextMDropSource::~CNextMDropSource()
 {
-
+	if (m_pDragSourceNotify)
+	{
+		m_pDragSourceNotify->Release();
+		m_pDragSourceNotify = nullptr;
+	}
 }
 
 //
@@ -17,18 +23,18 @@ CNextMDropSource::~CNextMDropSource()
 //
 HRESULT STDMETHODCALLTYPE CNextMDropSource::QueryInterface(REFIID iid, void ** ppvObject)
 {
-	// check to see what interface has been requested
-    if(iid == IID_IDropSource || iid == IID_IUnknown)
-    {
-        AddRef();
+   if(IsEqualIID(iid, IID_IDropSource) || IsEqualIID(iid, IID_IUnknown))
         *ppvObject = this;
-        return S_OK;
-    }
+	else if(IsEqualIID(iid, IID_IDropSourceNotify) && (m_pDragSourceNotify != nullptr))
+		return m_pDragSourceNotify->QueryInterface(iid, ppvObject);
     else
     {
         *ppvObject = 0;
         return E_NOINTERFACE;
     }
+
+    AddRef();
+    return S_OK;
 }
 
 ULONG STDMETHODCALLTYPE CNextMDropSource::AddRef(void)
@@ -65,7 +71,7 @@ HRESULT STDMETHODCALLTYPE CNextMDropSource::QueryContinueDrag(BOOL fEscapePresse
 		return DRAGDROP_S_CANCEL;
 
 	//마우스 왼쪽/오른쪽 버튼이 Release 되었을때 Drop 시작
-	if(grfKeyState & (MK_LBUTTON | MK_RBUTTON))
+	if(!(grfKeyState & (MK_LBUTTON | MK_RBUTTON)))
 		return DRAGDROP_S_DROP;
 
 	//그외에는 아무것도 안함
@@ -75,4 +81,9 @@ HRESULT STDMETHODCALLTYPE CNextMDropSource::QueryContinueDrag(BOOL fEscapePresse
 HRESULT STDMETHODCALLTYPE CNextMDropSource::GiveFeedback(DWORD dwEffect)
 {
 	return DRAGDROP_S_USEDEFAULTCURSORS;
+}
+
+void CNextMDropSource::SetDataObject(IDataObject* pDataObject)
+{
+	m_pDataObject = pDataObject;
 }

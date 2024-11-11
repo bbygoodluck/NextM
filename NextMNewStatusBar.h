@@ -89,6 +89,7 @@ class CNextMNewStatusBar : public wxControl
 		CTRL_Field_X,     // Ctrl_X
 		CTRL_Field_V,     // Ctrl_V
 		CTRL_Field_M,     // Ctrl_M
+		CTRL_Field_F8,    // Ctrl_F8
 		CTRL_Field_F11,   // Ctrl_F11
 		CTRL_Field_Max
 	};

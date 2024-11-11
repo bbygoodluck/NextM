@@ -128,7 +128,7 @@ void CExternalProgInfo::CreateExternalMenuList()
 		int iIconIndex;
 		int iOverlayIndex;
 
-		theUtility->GetIconIndex(cItBegin->_strPGPath, iIconIndex, iOverlayIndex);
+		theImageList->GetIconIndex(cItBegin->_strPGPath, iIconIndex, iOverlayIndex);
 		wxIcon ico;
 
 #ifdef __WXMSW__

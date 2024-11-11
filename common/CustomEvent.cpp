@@ -35,3 +35,9 @@ wxDEFINE_EVENT(wxEVT_VIEW_FAVORITE_FROM_STATUS, wxCommandEvent);
 
 //디렉토리 번호 표시(디렉토리 이동시 사용)
 wxDEFINE_EVENT(wxEVT_VIEW_DIR_NUM, wxCommandEvent);
+
+//압축하기
+wxDEFINE_EVENT(wxEVT_COMPRESS_EXEC, wxCommandEvent);
+
+//DnD
+wxDEFINE_EVENT(wxEVT_DRAGDROP_OPERATION, wxCommandEvent);

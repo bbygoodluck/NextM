@@ -17,16 +17,19 @@ void CNextMDragSourceHelper::Init()
 							   nullptr,
                                CLSCTX_INPROC_SERVER,
                                IID_IDragSourceHelper,
-                               (void**)&pDragSourceHelper)))
-		pDragSourceHelper = nullptr;
+                               (void**)&m_pDragSourceHelper)))
+		m_pDragSourceHelper = nullptr;
+
+	if(m_pDragSourceHelper)
+		m_pDragSourceHelper->AddRef();
 }
 
 void CNextMDragSourceHelper::Release()
 {
-	if( pDragSourceHelper != nullptr )
+	if( m_pDragSourceHelper != nullptr )
 	{
-		pDragSourceHelper->Release();
-		pDragSourceHelper = nullptr;
+		m_pDragSourceHelper->Release();
+		m_pDragSourceHelper = nullptr;
 	}
 }
 
@@ -34,7 +37,7 @@ HRESULT CNextMDragSourceHelper::InitializeFromBitmap(const wxString& strFileName
 {
 	HRESULT hr = S_OK;
 
-	if(pDragSourceHelper == nullptr)
+	if(m_pDragSourceHelper == nullptr)
 		return E_FAIL;
 
 	HIMAGELIST himl;
@@ -61,19 +64,22 @@ HRESULT CNextMDragSourceHelper::InitializeFromBitmap(const wxString& strFileName
 		sdi.ptOffset.y = cy;
 
 		sdi.hbmpDragImage = CreateBitmap(cx, cy, 1, 32, nullptr);
-		sdi.crColorKey = GetSysColor(COLOR_WINDOW);
+		sdi.crColorKey    = GetSysColor(COLOR_WINDOW);
 
 		HDC hDC = CreateCompatibleDC(NULL);
 		if(sdi.hbmpDragImage)
 		{
 			HBITMAP hbmPrev = (HBITMAP)SelectObject(hDC, (HGDIOBJ)sdi.hbmpDragImage);
-			ImageList_Draw(himl, sfi.iIcon, hDC, 0, 0, ILD_SCALE);
+			ImageList_Draw(himl, sfi.iIcon, hDC, 0, 0, ILD_NORMAL);
+
 			SelectObject(hDC, hbmPrev);
 
-			pDragSourceHelper->InitializeFromBitmap(&sdi, pDataObject);
+			m_pDragSourceHelper->InitializeFromBitmap(&sdi, pDataObject);
 
 			DeleteDC(hDC);
 			DeleteObject(sdi.hbmpDragImage);
+
+			DestroyIcon(sfi.hIcon);
 		}
 	}
 
@@ -82,12 +88,12 @@ HRESULT CNextMDragSourceHelper::InitializeFromBitmap(const wxString& strFileName
 
 HRESULT CNextMDragSourceHelper::InitializeFromWindow(HWND hwnd, const wxPoint& pt,IDataObject* pDataObject)
 {
-	if(pDragSourceHelper == nullptr)
+	if(m_pDragSourceHelper == nullptr)
 		return E_FAIL;
 
-	POINT pt1;
-	pt1.x = pt.x;
-	pt1.y = pt.y;
+	POINT point;
+	point.x = pt.x;
+	point.y = pt.y;
 
-	return pDragSourceHelper->InitializeFromWindow(hwnd, &pt1, pDataObject);
+	return m_pDragSourceHelper->InitializeFromWindow(hwnd, &point, pDataObject);
 }

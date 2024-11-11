@@ -3,6 +3,11 @@
 
 #ifdef __WXMSW__
 	#include "../utility/msw/MSWContextMenuHandler.h"
+	#include "../interface/msw/NextMDragSourceHelper.h"
+	#include "../interface/msw/NextMDropSource.h"
+
+	#include "../interface/msw/NextMDataObject.h"
+//	#include "../interface/msw/NextMEnumFormatEtc.h"
 #else
 #endif
 
@@ -15,6 +20,7 @@ wxBEGIN_EVENT_TABLE(CFileListView, wxWindow)
 	EVT_ERASE_BACKGROUND(CFileListView::OnErase)
 	EVT_SIZE(CFileListView::OnSize)
 	EVT_LEFT_DOWN(CFileListView::OnMouseLBottonDown)
+	EVT_LEFT_UP(CFileListView::OnMouseLBottonUp)
 	EVT_LEFT_DCLICK(CFileListView::OnMouseLButtonDBClick)
 	EVT_RIGHT_DOWN(CFileListView::OnMouseRButtonDown)
 	EVT_RIGHT_UP(CFileListView::OnMouseRButtonUp)
@@ -31,6 +37,14 @@ wxBEGIN_EVENT_TABLE(CFileListView, wxWindow)
 	EVT_MY_CUSTOM_COMMAND(wxEVT_CHANGE_VIEW_SORT, wxID_ANY, CFileListView::OnChangeSorting)
 	EVT_MY_CUSTOM_COMMAND(wxEVT_VIEW_FAVORITE_FROM_STATUS, wxID_ANY, CFileListView::OnShowFavoriteFromStatus)
 	EVT_MY_CUSTOM_COMMAND(wxEVT_VIEW_DIR_NUM, wxID_ANY, CFileListView::OnShowDirectoryNumber)
+
+	//압축메뉴 보기
+//	EVT_MY_CUSTOM_COMMAND(wxEVT_SHOW_COMPRESS_MENU, wxID_ANY, CFileListView::OnShowCompressMenu)
+	//압축메뉴 실행
+	EVT_MENU_RANGE(COMPRESS_START_ID, COMPRESS_END_ID, CFileListView::OnCompressMenuExecute)
+	EVT_UPDATE_UI_RANGE(COMPRESS_START_ID, DECOMPRESS_END_ID, CFileListView::OnCompressMenuUpdate)
+	EVT_MENU_RANGE(DECOMPRESS_START_ID, DECOMPRESS_END_ID, CFileListView::OnDeCompressMenuExecute)
+//	EVT_UPDATE_UI_RANGE(DECOMPRESS_START_ID, DECOMPRESS_END_ID, CFileListView::OnDeCompressMenuUpdate)
 wxEND_EVENT_TABLE()
 
 CFileListView::CFileListView(wxWindow* parent, const int nID, const wxSize& sz)
@@ -49,8 +63,8 @@ CFileListView::CFileListView(wxWindow* parent, const int nID, const wxSize& sz)
 
 	m_viewFont = *_gViewFont;
 
-	m_pImageList = std::make_unique<CImageList>();
-    m_pImageList->Attach(_gImageList);
+//	m_pImageList = std::make_unique<CImageList>();
+ //   m_pImageList->Attach(_gImageList);
 
     m_colDefault    = theColor->GetDefaultColor();
 	m_colDrive      = theColor->GetDriveColor();
@@ -85,6 +99,14 @@ CFileListView::CFileListView(wxWindow* parent, const int nID, const wxSize& sz)
 	m_pTxtCtrlForRename->Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(CFileListView::OnKeyDownTextCtrl), NULL, this);
 	m_pTxtCtrlForRename->Connect(wxEVT_COMMAND_TEXT_ENTER, wxCommandEventHandler(CFileListView::OnEnterTextCtrl), NULL, this);
 	m_pTxtCtrlForRename->Connect(wxEVT_KILL_FOCUS, wxFocusEventHandler(CFileListView::OnKillFocusTxtCtrl), NULL, this);
+
+#ifdef __WXMSW__
+	m_pDropTarget = std::make_unique<CNextMDropTarget>(this->GetHWND());
+	m_pDropTarget->SetDropTargetWindow(this);
+	m_pDropTarget->AddRef();
+
+	::RegisterDragDrop(this->GetHWND(), m_pDropTarget.get());
+#endif // __WXMSW__
 }
 
 CFileListView::~CFileListView()
@@ -100,6 +122,10 @@ CFileListView::~CFileListView()
 	m_pTxtCtrlForRename->Disconnect(wxEVT_KEY_DOWN, wxKeyEventHandler(CFileListView::OnKeyDownTextCtrl), NULL, this);
 	m_pTxtCtrlForRename->Disconnect(wxEVT_COMMAND_TEXT_ENTER, wxCommandEventHandler(CFileListView::OnEnterTextCtrl), NULL, this);
 	m_pTxtCtrlForRename->Disconnect(wxEVT_KILL_FOCUS, wxFocusEventHandler(CFileListView::OnKillFocusTxtCtrl), NULL, this);
+
+#ifdef __WXMSW__
+	::RevokeDragDrop(this->GetHWND());
+#endif
 }
 
 void CFileListView::Clear()
@@ -370,6 +396,10 @@ bool CFileListView::ProcessKeyEvent(int iKeyCode)
 	{
 		case WXK_F4:
 			ShowBookmark();
+			break;
+
+		case WXK_F8:
+			ShowCompressPopupMenu();
 			break;
 
 		case WXK_REVERSE_SLASH:
@@ -829,9 +859,16 @@ void CFileListView::OnSize(wxSizeEvent& event)
 
 void CFileListView::OnMouseLBottonDown(wxMouseEvent& event)
 {
+	m_bMouseDown = true;
 	DoMouseProcess(event.GetPosition());
+
 	if(!m_bSetFocus)
 		theSplitterManager->ChangeSplitView();
+}
+
+void CFileListView::OnMouseLBottonUp(wxMouseEvent& event)
+{
+	m_bMouseDown = false;
 }
 
 void CFileListView::OnMouseLButtonDBClick(wxMouseEvent& event)
@@ -851,6 +888,65 @@ void CFileListView::OnMouseRButtonUp(wxMouseEvent& event)
 
 void CFileListView::OnMouseMove(wxMouseEvent& event)
 {
+	if(m_bMouseDown && !theDnD->IsDragging())
+	{
+#ifdef __WXMSW__
+		IDataObject *pDataObject;
+		IDropSource *pDropSource;
+
+        DWORD        dwEffect;
+
+        FORMATETC fmtetc = { CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+        STGMEDIUM stgmed = { TYMED_HGLOBAL   , { 0 }, 0 };
+
+        // 전송할 데이터를 IDataObject로 설정한다.
+		HGLOBAL hGlobal = CopySelection();
+		if(hGlobal == NULL)
+		{
+			m_bMouseDown = false;
+			return;
+		}
+
+        stgmed.hGlobal = CopySelection();
+		if (stgmed.hGlobal)
+        {
+			theDnD->CreateDataObject(&fmtetc, &stgmed, 1, &pDataObject);
+			theDnD->CreateDropSource(&pDropSource, this);
+
+			if(!pDropSource)
+			{
+				m_bMouseDown = false;
+				return;
+			}
+
+			if(!pDataObject)
+			{
+				m_bMouseDown = false;
+				return;
+			}
+
+			((CNextMDropSource *)pDropSource)->SetDataObject(pDataObject);
+
+			CNextMDragSourceHelper dragSrcHelper;
+			wxPoint pt;
+
+			pt.x = event.GetPosition().x;
+			pt.y = event.GetPosition().y;
+
+			dragSrcHelper.InitializeFromWindow(this->GetHWND(), pt, pDataObject);
+
+		//	dragSrcHelper.InitializeFromBitmap(GetCurrentItem(), pDataObject);
+
+			::DoDragDrop(pDataObject, pDropSource, DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_LINK, &dwEffect);
+
+			pDataObject->Release();
+            pDropSource->Release();
+
+            m_bMouseDown = false;
+        }
+#endif
+	}
+
 	event.Skip();
 }
 
@@ -909,7 +1005,7 @@ bool CFileListView::FindItemInMousePoint(const wxPoint& pt, bool IsMouseMove)
 
 	if(bFoundOK)
 	{
-		if(!IsMouseMove)
+		if(!IsMouseMove || theDnD->IsDragging())
 			m_iCurrentItemIndex = m_iStartIndex + iClickPosIndex;
 	}
 
@@ -1300,10 +1396,9 @@ void CFileListView::DisplayItems(wxDC* pDC)
 			dispColor = m_colDir;
 		else
 		{
-			wxString strExt(Iter->GetExt()); // (theUtility->GetExt(strName).Upper());
+			wxString strExt(Iter->GetExt());
 			dispColor = theColor->GetExtColor(strExt.Upper());
 		}
-
 
 		if (bMatched)
 			dispColor = m_colMatch;
@@ -1313,8 +1408,6 @@ void CFileListView::DisplayItems(wxDC* pDC)
 
 		if (m_iCurrentItemIndex == iIndex)
 		{
-		//	this->SetToolTip(strName);
-
 			DisplayDetailInfo(pDC, *Iter, iIconIndex, iOverlayIconIndex);
 
 			wxRect rcFillRect(posInfo.m_mainRect);
@@ -1323,27 +1416,46 @@ void CFileListView::DisplayItems(wxDC* pDC)
 			wxPen   pen;
 			wxBrush brush;
 
-			//포커스가 없는경우
-			if (!m_bSetFocus)
+			if(theDnD->IsDragging())
 			{
-				pen = wxPen(wxColour(30, 30, 30), 1);
-				brush = wxColour(30, 30, 30);
+				if(isDir)
+				{
+					pen = wxPen(wxColour(255, 255, 0), 1, wxPENSTYLE_DOT);
+					brush = wxColour(40, 40, 40);
+				}
 			}
 			else
 			{
-				pen = dispColor;
-				brush = dispColor;
+				//포커스가 없는경우
+				if (!m_bSetFocus)
+				{
+					pen = wxPen(wxColour(30, 30, 30), 1);
+					brush = wxColour(30, 30, 30);
+				}
+				else
+				{
+					pen = dispColor;
+					brush = dispColor;
+				}
 			}
 
 			pDC->SetPen(pen);
 			pDC->SetBrush(brush);
 
 			pDC->DrawRectangle(rcFillRect);
-			//포커스가 없는경우
-			if (!m_bSetFocus)
-				dispColor = wxColour(90, 90, 90);
+
+			if(theDnD->IsDragging())
+			{
+				dispColor = wxColour(128, 128, 150);
+			}
 			else
-				dispColor = wxColour(0, 0, 0);
+			{
+				//포커스가 없는경우
+				if (!m_bSetFocus)
+					dispColor = wxColour(90, 90, 90);
+				else
+					dispColor = wxColour(0, 0, 0);
+			}
 		}
 		else
 		{
@@ -1815,7 +1927,7 @@ void CFileListView::DrawItemImage(wxDC* pDC, int x, int y, int flags, int nIconI
 	flags |= INDEXTOOVERLAYMASK(nOverlayIndex + 1);
 #endif // __WXMSW__
 
-	m_pImageList->Draw(nIconIndex, pDC, x, y, flags);
+	theImageList->Draw(nIconIndex, pDC, x, y, flags);
 }
 
 void CFileListView::GetSelectedItems(std::list<wxString>& lstSrc, bool IsCut)
@@ -1929,7 +2041,7 @@ wxThread::ExitCode CFileListView::Entry()
 			continue;
 #endif // __WXMSW__
 
-		theUtility->GetIconIndex(it->GetFullPath(), iIconIndex, iOverlayIconIndex);
+		theImageList->GetIconIndex(it->GetFullPath(), iIconIndex, iOverlayIconIndex);
 		it->SetIconIndex(iIconIndex, iOverlayIconIndex);
 		it->SetImageIconFlag(true);
 
@@ -2177,7 +2289,6 @@ void CFileListView::OnKillFocusTxtCtrl(wxFocusEvent& event)
 	this->SetFocus();
 }
 
-
 void CFileListView::OnFileEdit(wxCommandEvent &event)
 {
 	if(theExternal->GetExternalProgCount() == 0)
@@ -2234,7 +2345,7 @@ void CFileListView::ShowExternalProgramList()
 		return;
 	}
 
-	wxBitmap bmpExternalPG = wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_OTHER, wxSize(16, 16));
+//	wxBitmap bmpExternalPG = wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_OTHER, wxSize(16, 16));
 
 	int iItemPosition = m_iCurrentItemIndex - m_iStartIndex;
 	std::vector<CPositionInfo>::const_iterator cItPos = m_posList.begin() + iItemPosition;
@@ -2394,9 +2505,9 @@ void CFileListView::OnPathMenuOperation(wxCommandEvent& event)
 		case _MENU_PATH_FOWARD:
 		{
 			m_iBackFowardIndex++;
-			if(m_iBackFowardIndex >= m_vecVisitDir.size())
+			if(m_iBackFowardIndex >= (int)m_vecVisitDir.size())
 			{
-				m_iBackFowardIndex = m_vecVisitDir.size() - 1;
+				m_iBackFowardIndex = (int)(m_vecVisitDir.size() - 1);
 				return;
 			}
 
@@ -2443,3 +2554,214 @@ void CFileListView::OnShowDirectoryNumber(wxCommandEvent& event)
 	m_bDirectoryNumbering = !m_bDirectoryNumbering;
 	theUtility->RefreshWindow(this, m_viewRect);
 }
+
+
+//압축메뉴 선택 후..
+void CFileListView::OnCompressMenuExecute(wxCommandEvent& event)
+{
+	std::vector<CNextMDirData>::iterator iter = m_itemList.begin() + m_iCurrentItemIndex;
+
+	int nSelCount = m_hashSelectedItem.size();
+
+	if(nSelCount == 0)
+	{
+		if (iter->IsDrive())
+		{
+			wxMessageBox(theMsg->GetMessage(wxT("MSG_INFO_DRIVE_COMPRESS_ERROR")), PROGRAM_FULL_NAME, wxICON_INFORMATION | wxOK);
+			return;
+		}
+	}
+
+	theComDec->SetImmediatelyCompress(true);
+	int nId = event.GetId();
+
+	wxCommandEvent evt(wxEVT_COMPRESS_EXEC);
+	evt.SetId(nId);
+
+	wxPostEvent(_gMenuEvent, evt);
+}
+
+void CFileListView::ShowCompressPopupMenu()
+{
+	if(wxGetKeyState(WXK_CONTROL))
+	{
+		if(!IsAvaliableDecompress())
+			return;
+	}
+
+	wxMenu* pPopupMenu = theComDec->GetPopupMenu( wxGetKeyState(WXK_CONTROL) ? true : false);
+	this->PopupMenu(pPopupMenu, GetItemPos());
+}
+
+wxPoint CFileListView::GetItemPos()
+{
+	int iItemPosition = m_iCurrentItemIndex - m_iStartIndex;
+	std::vector<CPositionInfo>::const_iterator cItPos = m_posList.begin() + iItemPosition;
+
+	return wxPoint(cItPos->m_nameRect.GetLeft() + 5, cItPos->m_nameRect.GetTop() + ICON_HEIGHT + 5);
+}
+
+void CFileListView::OnCompressMenuUpdate(wxUpdateUIEvent& event)
+{
+	if(event.IsCheckable())
+		event.Check(false);
+}
+
+bool CFileListView::IsAvaliableDecompress()
+{
+	std::vector<CNextMDirData>::iterator iter = m_itemList.begin() + m_iCurrentItemIndex;
+
+	wxString strFullPath(iter->GetFullPath());
+	wxString strFileName(iter->GetName());
+	wxString strTmp(iter->GetName());
+
+	wxString strMsg(wxT(""));
+	//디렉토리 인경우
+	if(iter->IsDir())
+	{
+		strMsg = wxString::Format(theMsg->GetMessage(wxT("MSG_DECOMPRESS_DLG_DECOMPRESS_ERR_DIR")), strFileName);
+		wxMessageBox(strMsg, PROGRAM_FULL_NAME, wxICON_ERROR | wxOK);
+		return false;
+	}
+	else
+	{
+		int extIndex = -1;
+		if(!theComDec->IsIncludeCompressedFileExt(strFileName, extIndex))
+		{
+			strMsg = wxString::Format(theMsg->GetMessage(wxT("MSG_DECOMPRESS_DLG_DECOMPRESS_ERR_FILE")), strFileName);
+			wxMessageBox(strMsg, PROGRAM_FULL_NAME, wxICON_ERROR | wxOK);
+			return false;
+		}
+	}
+
+	m_strCompressedFile = strFullPath;
+	return true;
+}
+
+void CFileListView::OnDeCompressMenuExecute(wxCommandEvent& event)
+{
+	int nId = event.GetId();
+
+	wxCommandEvent evt(wxEVT_COMPRESS_EXEC);
+
+	evt.SetString(m_strCompressedFile);
+	evt.SetId(nId);
+
+	wxPostEvent(_gMenuEvent, evt);
+}
+
+void CFileListView::SetDnDUpdate()
+{
+	if(!m_bSetFocus && theDnD->IsDropped())
+		theSplitterManager->ChangeSplitView();
+
+	theUtility->RefreshWindow(this, m_viewRectDisp);
+}
+
+int CFileListView::DropWindowSelectItemType()
+{
+	std::vector<CNextMDirData>::iterator iter = m_itemList.begin() + m_iCurrentItemIndex;
+	int iType = 0;
+	if(iter->IsDir())
+		iType = 1;
+
+	return iType;
+}
+
+#ifdef __WXMSW__
+HGLOBAL CFileListView::CopySelection()
+{
+	HGLOBAL hMem;
+	wxArrayString arrDragFiles;
+	UINT uiLen = 0;
+
+	int iSelectedItems = m_hashSelectedItem.size();
+	if (iSelectedItems == 0)
+	{
+		std::vector<CNextMDirData>::iterator itemIt = m_itemList.begin() + m_iCurrentItemIndex;
+		if(itemIt->IsDrive())
+		{
+			wxMessageBox(theMsg->GetMessage(wxT("MSG_COPY_MOVE_NOT_SUPPORT_DRIVE")), PROGRAM_FULL_NAME, wxOK | wxICON_ERROR);
+			return NULL;
+		}
+
+		arrDragFiles.Add(itemIt->GetFullPath());
+	}
+	else
+	{
+		std::unordered_map<int, SELITEM_INFO>::const_iterator iter;
+
+		for (iter = m_hashSelectedItem.begin(); iter != m_hashSelectedItem.end(); iter++)
+		{
+			SELITEM_INFO _Info = iter->second;
+			std::vector<CNextMDirData>::iterator itemIt = m_itemList.begin() + _Info.m_iSelIndex;
+
+			arrDragFiles.Add(itemIt->GetFullPath());
+		}
+	}
+
+	if (arrDragFiles.size() == 0)
+		return NULL;
+
+	int iItemCount = wx_static_cast(int, arrDragFiles.size());
+
+	wxString strFileLists;
+	wxString strDragItem(wxT(""));
+	for (int iIndex = 0; iIndex < iItemCount; iIndex++)
+	{
+		strFileLists = arrDragFiles.Item(iIndex);
+
+#if defined(_UNICODE) || defined(UNICODE)
+		uiLen += strFileLists.Len() + 1;
+#else
+		uiLen += WideCharToMultiByte(CP_ACP, 0, strFileLists, -1, NULL, 0, NULL, NULL);
+		uiLen += 1;
+#endif
+	}
+
+	#if defined(_UNICODE) || defined(UNICODE)
+	uiLen = sizeof(DROPFILES) + sizeof(TCHAR) * (uiLen + 1);
+#else
+	uiLen = sizeof(DROPFILES) + sizeof(char) * (uiLen + 1);
+#endif
+
+	hMem = GlobalAlloc(GHND | GMEM_SHARE, uiLen);
+	if (!hMem)
+		return NULL;
+
+	DROPFILES* dfiles = (DROPFILES *)GlobalLock(hMem);
+	if (!dfiles)
+	{
+		GlobalFree(hMem);
+		return NULL;
+	}
+
+	dfiles->pFiles = sizeof(DROPFILES);
+	GetCursorPos(&(dfiles->pt));
+	dfiles->fNC = TRUE;
+	dfiles->fWide = FALSE;
+
+#if defined(_UNICODE) || defined(UNICODE)
+	dfiles->fWide = TRUE;
+	TCHAR* pFile = (TCHAR *)(LPBYTE(dfiles) + sizeof(DROPFILES));
+#else
+	char* pFile = (char *)(LPBYTE(dfiles) + sizeof(DROPFILES));// (char *)&dfiles[1];
+#endif
+
+	for (int iIndex = 0; iIndex < iItemCount; iIndex++)
+	{
+		wxString strItem = arrDragFiles.Item(iIndex);
+		lstrcpy(pFile, CONVSTR(strItem));
+
+#if defined(_UNICODE) || defined(UNICODE)
+		pFile = 1 + _tcschr(pFile, '\0');
+#else
+		pFile = 1 + strchr(pFile, '\0');
+#endif
+	}
+
+	GlobalUnlock(hMem);
+	return hMem;
+}
+
+#endif

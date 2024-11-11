@@ -8,6 +8,8 @@
 #include "./dialog/DlgFind.h"
 #include "./dialog/DlgFavoriteManager.h"
 #include "./dialog/DlgDirManager.h"
+#include "./dialog/DlgCompress.h"
+#include "./dialog/DlgDeCompress.h"
 #include "./dialog/GenericDirDialog.h"
 #include "./dialog/DlgEnv.h"
 #include "./dialog/wxMozillaLikeAboutBoxDialog.h"
@@ -64,6 +66,8 @@ void CNextMExecuteMenuOperation::Init()
 		{ wxT("m_menuComp_CurrentDirCompRelease"),	std::bind(&CNextMExecuteMenuOperation::CompressMenu_DeCompressCurDir , this ) },
 		{ wxT("m_menuComp_MakeDirCompRelease"),	    std::bind(&CNextMExecuteMenuOperation::CompressMenu_DeCompressMkDir  , this ) },
 		{ wxT("m_menuComp_SelDirCompRelease"),	    std::bind(&CNextMExecuteMenuOperation::CompressMenu_DeCompressSelDir , this ) },
+		{ wxT("m_eMenu_DecompressF8"),	            std::bind(&CNextMExecuteMenuOperation::ShowDecompressMenu            , this ) },
+
 
 		//보기메뉴
 		{ wxT("m_viewMenu_FullScr"),	            std::bind(&CNextMExecuteMenuOperation::ViewMenu_FullScreen           , this ) },
@@ -126,9 +130,15 @@ void CNextMExecuteMenuOperation::ExecuteMenuOperation(int iMenuID, _MENU_EVENT_T
 	}
 }
 
+CFileListView* CNextMExecuteMenuOperation::GetFileListView()
+{
+	return theSplitterManager->GetCurrentViewManager()->GetFileListView();
+}
+
 //파일메뉴
 void CNextMExecuteMenuOperation::FileMenu_Execution()
 {
+
 }
 
 void CNextMExecuteMenuOperation::FileMenu_NewTab()
@@ -150,23 +160,50 @@ void CNextMExecuteMenuOperation::FileMenu_Move()
 void CNextMExecuteMenuOperation::DoFileOperation(FILE_OPERATION fop, bool IsUseClipboard)
 {
 	std::list<wxString> lstSrc;
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
 
-	wxString strDest(pFileListView->GetCurrentPath());
+	wxString strDest(wxT(""));
 	wxString strTgtDirTmp(wxT(""));
-
 	bool bSameDir = false;
-	if(!IsUseClipboard)
+
+	CFileListView* pFileListView = nullptr;
+
+	if(!theDnD->IsDragging())
 	{
-		strTgtDirTmp = GetDirectorySelect();
-		pFileListView->GetSelectedItems(lstSrc);
+		pFileListView = GetFileListView();
+
+		strDest = pFileListView->GetCurrentPath();
+
+		if(!IsUseClipboard)
+		{
+			strTgtDirTmp = GetDirectorySelect();
+			pFileListView->GetSelectedItems(lstSrc);
+		}
+		else
+		{
+			fop = theClipboard->GetFileOperation() == _MENU_EDIT_COPY_CLIPBOARD ? FILE_OP_COPY : FILE_OP_CUT;
+			theClipboard->GetData(lstSrc);
+
+			strTgtDirTmp = theClipboard->GetSrcPath();
+		}
+
+		if(!IsUseClipboard)
+			strDest = strTgtDirTmp;
 	}
 	else
 	{
-		fop = theClipboard->GetFileOperation() == _MENU_EDIT_COPY_CLIPBOARD ? FILE_OP_COPY : FILE_OP_CUT;
-		theClipboard->GetData(lstSrc);
+		lstSrc = theDnD->GetDropDatas();
+		CFileListView* pTargetView = (CFileListView *)theDnD->GetDropWindow();
+		CFileListView* pSourceView = nullptr;
+		if(theDnD->GetDragWindow() != nullptr)
+		{
+			pSourceView = (CFileListView *)theDnD->GetDragWindow();
+			strTgtDirTmp = pSourceView->GetCurrentPath();
+		}
 
-		strTgtDirTmp = theClipboard->GetSrcPath();
+		strDest = pTargetView->GetCurrentPath();
+
+		if(theDnD->IsDropDirectory())
+			strDest = pTargetView->GetCurrentItem();
 	}
 
 	if(lstSrc.size() == 0)
@@ -175,16 +212,14 @@ void CNextMExecuteMenuOperation::DoFileOperation(FILE_OPERATION fop, bool IsUseC
 	if(strDest.CmpNoCase(strTgtDirTmp) == 0)
 		bSameDir = true;
 
-	if(!IsUseClipboard)
-		strDest = strTgtDirTmp;
-
 #ifdef __WXMSW__
 	bool IsCopy = fop == FILE_OP_COPY ? true : false;
 	bool bRet = theFileOperation->CopyOrMoveOperations(lstSrc, strDest, _gMainFrame, IsCopy, bSameDir);
 
 #endif // __WXMSW__
 
-	pFileListView->SelectedItemsClear();
+	if(!theDnD->IsDragging())
+		pFileListView->SelectedItemsClear();
 }
 
 #ifdef __WXMSW__
@@ -255,7 +290,7 @@ static int CALLBACK BrowseCallbackProc(HWND hWnd, UINT uMsg, LPARAM lParam, LPAR
 
 wxString CNextMExecuteMenuOperation::GetDirectorySelect()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 	wxString strTargetPath(wxT(""));
 
 	if(theConfig->GetSplitStyle() == WINDOW_SPLIT_NONE)
@@ -317,7 +352,7 @@ void CNextMExecuteMenuOperation::FileMenu_Rename()
 
 void CNextMExecuteMenuOperation::FileMenu_CreateFolder()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 	wxString strDest(pFileListView->GetCurrentPath());
 
 	DlgAddDir dlgDir(_gMainFrame);
@@ -346,7 +381,7 @@ void CNextMExecuteMenuOperation::ExecuteDeleteProcess(_MENU_EVENT_TYPE mType)
 	bool bTrash = (mType == _MENU_FILE_DEL_TRASH) ? true : false;
 
 	std::list<wxString> lstSrc;
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 
 	pFileListView->GetSelectedItems(lstSrc);
 
@@ -362,7 +397,7 @@ void CNextMExecuteMenuOperation::ExecuteDeleteProcess(_MENU_EVENT_TYPE mType)
 
 void CNextMExecuteMenuOperation::FileMenu_ExecCMD()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 	wxString strPath = pFileListView->GetCurrentPath();
 
 		wxString strCommand(wxT(""));
@@ -403,13 +438,13 @@ void CNextMExecuteMenuOperation::FileMenu_Terminate()
 //편집메뉴
 void CNextMExecuteMenuOperation::EditMenu_AllRelease()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 	pFileListView->SelectAllItemOrRelease(false);
 }
 
 void CNextMExecuteMenuOperation::EditMenu_AllSelect()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 	pFileListView->SelectAllItemOrRelease(true);
 }
 
@@ -426,7 +461,7 @@ void CNextMExecuteMenuOperation::EditMenu_Move_UseClipboard()
 void CNextMExecuteMenuOperation::DoClipboardOperation(bool IsCut)
 {
 	std::list<wxString> lstSrc;
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 
 	pFileListView->GetSelectedItems(lstSrc, IsCut);
 
@@ -451,7 +486,7 @@ void CNextMExecuteMenuOperation::EditMenu_Paste_UseClipboard()
 
 void CNextMExecuteMenuOperation::EditMenu_FileFind()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 	wxString strPath = pFileListView->GetCurrentPath();
 
 	DlgFind findDlg(_gMainFrame);
@@ -462,7 +497,7 @@ void CNextMExecuteMenuOperation::EditMenu_FileFind()
 
 void CNextMExecuteMenuOperation::EditMenu_ViewContextMenu()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 
 	wxCommandEvent evt(wxEVT_SHOW_CONTEXTMENU);
 	wxPostEvent(pFileListView, evt);
@@ -471,7 +506,7 @@ void CNextMExecuteMenuOperation::EditMenu_ViewContextMenu()
 //경로메뉴
 void CNextMExecuteMenuOperation::PathMenu_DirManager()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 	wxString strPath = pFileListView->GetCurrentPath();
 
 	wxString strVolume = strPath.Left(1);
@@ -519,7 +554,7 @@ void CNextMExecuteMenuOperation::PathMenu_GoFoward()
 
 void CNextMExecuteMenuOperation::ExecutePathMenuOperation(_MENU_EVENT_TYPE mType)
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 
 	wxCommandEvent evt(wxEVT_EXEC_MENU_OPERATION);
 	evt.SetId(mType);
@@ -529,7 +564,7 @@ void CNextMExecuteMenuOperation::ExecutePathMenuOperation(_MENU_EVENT_TYPE mType
 
 void CNextMExecuteMenuOperation::PathMenu_GotoDirDirectly()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 	wxString strPath(pFileListView->GetCurrentPath());
 
 	wxGenericDirDialog dlgTargetPath(_gMainFrame, wxT("Select target directory"), strPath);
@@ -547,20 +582,112 @@ void CNextMExecuteMenuOperation::PathMenu_GotoDirDirectly()
 }
 
 //압축
+void CNextMExecuteMenuOperation::ShowCompressPopupMenu()
+{
+	CFileListView* pFileListView = GetFileListView();
+	pFileListView->ShowCompressPopupMenu();
+}
+
+void CNextMExecuteMenuOperation::ShowDecompressMenu()
+{
+	CFileListView* pFileListView = GetFileListView();
+	pFileListView->ShowCompressPopupMenu();
+}
+
 void CNextMExecuteMenuOperation::CompressMenu_DoCompress()
 {
+	theComDec->SetImmediatelyCompress(false);
+	CompressMenu_ExecuteCompress(COMPRESS_START_ID);
 }
 
 void CNextMExecuteMenuOperation::CompressMenu_DeCompressCurDir()
 {
+	CFileListView* pFileListView = GetFileListView();
+	if(!pFileListView->IsAvaliableDecompress())
+		return;
+
+	wxString strCompressedFile = pFileListView->GetCurrentItem();
+	CompressMenu_ExecuteDecompress(DECOMPRESS_START_ID, strCompressedFile);
 }
 
 void CNextMExecuteMenuOperation::CompressMenu_DeCompressMkDir()
 {
+	CFileListView* pFileListView = GetFileListView();
+	if(!pFileListView->IsAvaliableDecompress())
+		return;
+
+	wxString strCompressedFile = pFileListView->GetCurrentItem();
+	CompressMenu_ExecuteDecompress(DECOMPRESS_START_ID + 1, strCompressedFile);
 }
 
 void CNextMExecuteMenuOperation::CompressMenu_DeCompressSelDir()
 {
+	CFileListView* pFileListView = GetFileListView();
+	if(!pFileListView->IsAvaliableDecompress())
+		return;
+
+	wxString strCompressedFile = pFileListView->GetCurrentItem();
+	CompressMenu_ExecuteDecompress(DECOMPRESS_START_ID + 2, strCompressedFile);
+}
+
+void CNextMExecuteMenuOperation::CompressMenu_ExecuteCompress(int nId)
+{
+	CompressMenu_ExecuteCompress(nId, wxT(""));
+}
+
+void CNextMExecuteMenuOperation::CompressMenu_ExecuteCompress(int nId, const wxString& strCompressedFile)
+{
+	std::list<wxString> lstSrc;
+
+	CFileListView* pFileListView = GetFileListView();
+	pFileListView->GetSelectedItems(lstSrc);
+
+	if(lstSrc.size() == 0)
+		return;
+
+	pFileListView->SelectedItemsClear();
+
+	int compressExtIndex = nId - COMPRESS_START_ID;
+
+	wxString strFullPath(pFileListView->GetCurrentPath());
+
+	wxString strCompressedExt = theComDec->GetCompressList().at(compressExtIndex);
+	strCompressedExt = strCompressedExt.MakeLower();
+
+	wxString strCompressedPath(wxT(""));
+	wxString strCompressedName(wxT(""));
+
+	if(strCompressedFile.CmpNoCase(wxT("")) == 0)
+	{
+		if(lstSrc.size() == 1)
+		{
+			wxString strCompressItem = lstSrc.front();
+			wxString strPathFileName = theUtility->GetPathName(strCompressItem);
+			strCompressedName = theUtility->GetFileName(strPathFileName, false);
+		}
+		else
+			strCompressedName = strFullPath.Len() == 3 ? strFullPath.Left(1) : theUtility->GetPathName(strFullPath);
+
+		strCompressedPath = strFullPath.Len() == 3 ? strFullPath : strFullPath + SLASH;
+		strCompressedFile = strCompressedPath + strCompressedName + wxT(".") + strCompressedExt;
+	}
+
+	DlgCompress dlg(_gMainFrame);
+	dlg.SetCompressInfo(lstSrc, strCompressedFile, wxT(""), strCompressedExt);
+	dlg.ShowModal();
+	dlg.Destroy();
+}
+
+void CNextMExecuteMenuOperation::CompressMenu_ExecuteDecompress(int nId, const wxString& strCompressedFile)
+{
+	CFileListView* pFileListView = GetFileListView();
+	wxString strFullPath(pFileListView->GetCurrentPath());
+
+	DlgDeCompress dlg(_gMainFrame);
+
+	dlg.SetDecompressInfo(strCompressedFile, strFullPath, nId);
+	dlg.ShowModal();
+	dlg.Destroy();
 }
 
 //보기메뉴
@@ -592,7 +719,7 @@ void CNextMExecuteMenuOperation::ChangeSplitStyle(int iSplitStyle)
 		theConfig->SetChangeGlobalVal(wxT("SplitWindowStyle"), iSplitStyle);
 		theSplitterManager->SplitWindow();
 
-		CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+		CFileListView* pFileListView = GetFileListView();
 		pFileListView->SetFocus();
 	}
 }
@@ -721,7 +848,7 @@ void CNextMExecuteMenuOperation::ViewMenu_SubDir()
 
 void CNextMExecuteMenuOperation::ViewMenu_DirNum()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 
 	wxCommandEvent evt(wxEVT_VIEW_DIR_NUM);
 	wxPostEvent(pFileListView, evt);
@@ -742,7 +869,7 @@ void CNextMExecuteMenuOperation::BookmarkOperation(_MENU_EVENT_TYPE mType)
 	DlgFavoriteManager dlg(_gMainFrame);
 	if (mType == _MENU_FAVORITE_ITEM_ADD)
 	{
-		CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+		CFileListView* pFileListView = GetFileListView();
 		wxString strCurrentPath(pFileListView->GetCurrentPath());
 
 		dlg.SetAddPath(strCurrentPath, true);
@@ -809,7 +936,7 @@ void CNextMExecuteMenuOperation::ToolMenu_SaveSetting()
 
 	if (theConfig->IsSaveLastSession())
 	{
-		CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+		CFileListView* pFileListView = GetFileListView();
 		CFileListView* pFileListView2 = nullptr;
 
 		if(theConfig->GetSplitStyle() != WINDOW_SPLIT_NONE)
@@ -881,7 +1008,7 @@ void CNextMExecuteMenuOperation::HelpMenu_ThisProgram()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CNextMExecuteMenuOperation::SetVisitDirDropDownMenu(wxAuiToolBar* tb, wxAuiToolBarEvent& event)
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 
 	std::vector<wxString>::iterator itBegin = pFileListView->BackFowardDirBegin();
 	std::vector<wxString>::iterator itEnd = pFileListView->BackFowardDirEnd();
@@ -908,7 +1035,7 @@ void CNextMExecuteMenuOperation::SetVisitDirDropDownMenu(wxAuiToolBar* tb, wxAui
 
 void CNextMExecuteMenuOperation::UpdateBackFowrdMenu(wxUpdateUIEvent& event)
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 	int iBackForwardIndex = pFileListView->GetBackFowardIndex();
 
 	event.Check(false);
@@ -920,7 +1047,7 @@ void CNextMExecuteMenuOperation::UpdateBackFowrdMenu(wxUpdateUIEvent& event)
 
 void CNextMExecuteMenuOperation::GotoBackForwardDirectory(int iBackForwardIndex)
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 	std::vector<wxString>::iterator it = pFileListView->BackFowardDirBegin() + iBackForwardIndex;
 
 	pFileListView->SetBackForwardIndex(iBackForwardIndex);
@@ -932,12 +1059,24 @@ void CNextMExecuteMenuOperation::GotoBackForwardDirectory(int iBackForwardIndex)
 	theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strDirectory, CHANGE_DIR_PATHVIEW);
 }
 
-
 void CNextMExecuteMenuOperation::ShowFavoriteFromStatusBar()
 {
-	CFileListView* pFileListView = theSplitterManager->GetCurrentViewManager()->GetFileListView();
+	CFileListView* pFileListView = GetFileListView();
 
 	wxCommandEvent evt(wxEVT_VIEW_FAVORITE_FROM_STATUS);
 	wxPostEvent(pFileListView, evt);
 
+}
+
+void CNextMExecuteMenuOperation::DragDropOperation()
+{
+	FILE_OPERATION fop;
+
+#ifdef __WXMSW__
+	DWORD dwEffect = theDnD->GetDropOperation();
+	fop = dwEffect == DROPEFFECT_COPY ? FILE_OP_COPY :
+		  dwEffect == DROPEFFECT_MOVE ? FILE_OP_CUT : FILE_OP_NONE;
+#endif // __WXMSW__
+
+	DoFileOperation(fop);
 }

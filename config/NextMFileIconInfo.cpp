@@ -58,7 +58,7 @@ void CNextMFileIconInfo::Init()
         int iOverlayIndex = 0;
 		wxString strTypeName = wxT("");
 
-        theUtility->GetIconIndex(strExtSend, iIconIndex, iOverlayIndex, true);
+        theImageList->GetIconIndex(strExtSend, iIconIndex, iOverlayIndex, true);
         strTypeName = theUtility->GetFileDescription(strExtSend, strExtSend);
 
         _stFileIconInfo stIconInfo;

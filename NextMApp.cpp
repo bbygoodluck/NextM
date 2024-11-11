@@ -121,7 +121,8 @@ bool CNextMApp::Initialize()
 	_gSystemLang = theUtility->GetSystemLang();
 
 	//이미지리스트
-	theUtility->LoadImageList();
+	theImageList->LoadImageList();
+	theImageList->Attach(_gImageList);
 
 	_strCurrentPath = theUtility->GetWorkDir();
 

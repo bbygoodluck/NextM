@@ -51,7 +51,7 @@ void CDriveInfo::Init()
 			int iIconIndex = -1;
 			int iOverlayIconIndex = -1;
 
-			theUtility->GetIconIndex(strDriveName, iIconIndex, iOverlayIconIndex);
+			theImageList->GetIconIndex(strDriveName, iIconIndex, iOverlayIconIndex);
 
 			CNextMDirData& data = m_vecDriveList.emplace_back();
 

@@ -399,7 +399,7 @@ void CLocalFileListView::DoCreate(CWatcherItem* pItem)
 		if(!bIconSet)
 		{
 			strDesc = theUtility->GetFileDescription(strExt,  strFullPath);
-			theUtility->GetIconIndex(strFullPath, iIconIndex, iOverlayIconIndex);
+			theImageList->GetIconIndex(strFullPath, iIconIndex, iOverlayIconIndex);
 		}
 
 		dirItem.SetIconIndex(iIconIndex, iOverlayIconIndex);
@@ -632,7 +632,7 @@ void CLocalFileListView::DoRename(CWatcherItem* pItem)
 	if(!theIconInfo->GetFileIconInfo(strExt, iIconIndex, iOverlayIconIndex, strDesc))
 	{
 		strDesc = theUtility->GetFileDescription(strExt, strFullPath);
-		theUtility->GetIconIndex(it->GetFullPath(), iIconIndex, iOverlayIconIndex);
+		theImageList->GetIconIndex(it->GetFullPath(), iIconIndex, iOverlayIconIndex);
 	}
 
 	it->SetExt(strExt);

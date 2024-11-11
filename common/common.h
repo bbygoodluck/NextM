@@ -86,17 +86,27 @@
 	#include "../utility/msw/MSWFileOperation.h"
 	#include "../utility/msw/MSWClipboard.h"
 	#include "../config/NextMFileIconInfo.h"
+	#include "../interface/msw/NextMDragDropCommon.h"
 
 	#define theDriveInfo        (CDriveInfo::Get())
 	#define theIconInfo         (CNextMFileIconInfo::Get())
 	#define theFileOperation    (CMSWNextMFileOperation::Get())
 	#define theClipboard        (CMSWClipboard::Get())
+	#define theDnD              (CNextMDnDCommon::Get())
 #else
 
 #endif
 
+//이미지리스트
+#include "../utility/ImageList.h"
+#define theImageList (CImageList::Get())
+
 #include "../interface/NextMNCD.h"
 //디렉토리관리
 #define theNCD              (CNextMNCD::Get())
+
+//압축
+#include "../compress/ComDecCommon.h"
+#define theComDec           (CComDecCommon::Get())
 
 #endif // COMMON_H_INCLUDED

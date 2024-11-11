@@ -40,6 +40,10 @@ private:
 	void OnGoBackForward(wxAuiToolBarEvent& event);
 	void OnBackForwardMenuClick(wxCommandEvent & event);
 
+	void OnCompressExecute(wxCommandEvent& event);
+
+	//Drag And Drop
+	void OnDragDropOperation(wxCommandEvent& event);
 	wxDECLARE_EVENT_TABLE();
 };
 

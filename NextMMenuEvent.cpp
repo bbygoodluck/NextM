@@ -9,6 +9,10 @@ wxBEGIN_EVENT_TABLE(CNextMMenuEvent, wxEvtHandler)
 	EVT_AUITOOLBAR_TOOL_DROPDOWN(TOOLBAR_ID_GO_BACK, CNextMMenuEvent::OnGoBackForward)
 	EVT_AUITOOLBAR_TOOL_DROPDOWN(TOOLBAR_ID_GO_FORWARD, CNextMMenuEvent::OnGoBackForward)
 	EVT_MENU_RANGE(wxBACKFORWARD_START, wxBACKFORWARD_END, CNextMMenuEvent::OnBackForwardMenuClick)
+
+	EVT_MY_CUSTOM_COMMAND(wxEVT_COMPRESS_EXEC, wxID_ANY, CNextMMenuEvent::OnCompressExecute)
+	EVT_MY_CUSTOM_COMMAND(wxEVT_DRAGDROP_OPERATION, wxID_ANY, CNextMMenuEvent::OnDragDropOperation)
+
 wxEND_EVENT_TABLE()
 
 CNextMMenuEvent::CNextMMenuEvent(CNextMFrame* _pMainFrame)
@@ -62,6 +66,7 @@ void CNextMMenuEvent::Init()
 		{ wxT("m_menuComp_CurrentDirCompRelease"),	_MENU_DECOMPRESS_CURRENT_DIR },
 		{ wxT("m_menuComp_MakeDirCompRelease"),	    _MENU_DECOMPRESS_MK_FOLDER },
 		{ wxT("m_menuComp_SelDirCompRelease"),	    _MENU_DECOMPRESS_SEL_DIR },
+		{ wxT("m_eMenu_DecompressF8"),	            _MENU_DECOMPRESS_SHOW_POPUP },
 		{ wxT("m_viewMenu_FullScr"),	            _MENU_VIEW_FULLSCREEN },
 		{ wxT("m_viewMenu_Window_0"),	            _MENU_VIEW_WINDOW_SINGLE },
 		{ wxT("m_viewMenu_Window_1"),	            _MENU_VIEW_WINDOW_VERT },
@@ -190,14 +195,8 @@ void CNextMMenuEvent::OnMenuEventUpdate(wxUpdateUIEvent& event)
 		if(_iupdateID == XRCID(strSortMenu))
 			event.Check(true);
 	}
-	else if(_iupdateID == XRCID("m_viewMenu_DirNumber"))
-	{
-//		if(_gContextManager->IsShowDirectoryNumbering())
-//			event.Check(true);
-	}
 	else if(_iupdateID >= wxBACKFORWARD_START && _iupdateID <= wxBACKFORWARD_END)
 		m_pMenuOperation->UpdateBackFowrdMenu(event);
-
 }
 
 void CNextMMenuEvent::DoMenuOperation(int nMenuID)
@@ -397,4 +396,24 @@ void CNextMMenuEvent::OnBackForwardMenuClick(wxCommandEvent& event)
 void CNextMMenuEvent::ExecuteMenu(int nMenuID)
 {
 	DoMenuOperation(nMenuID);
+}
+
+void CNextMMenuEvent::OnCompressExecute(wxCommandEvent& event)
+{
+	int nId = event.GetId();
+	if(nId < DECOMPRESS_START_ID)
+	{	//압축메뉴 수행
+		m_pMenuOperation->CompressMenu_ExecuteCompress(nId);
+		return;
+	}
+
+	wxString strCompressedFile = event.GetString();
+	//압축해제 메뉴 수행
+	m_pMenuOperation->CompressMenu_ExecuteDecompress(nId, strCompressedFile);
+}
+
+
+void CNextMMenuEvent::OnDragDropOperation(wxCommandEvent& event)
+{
+	m_pMenuOperation->DragDropOperation();
 }

@@ -1,7 +1,7 @@
 #include "ginc.h"
 #include "NextMFrame.h"
 #include "NextMSplitterWnd.h"
-#include "NextMStatusBar.h"
+//#include "NextMStatusBar.h"
 #include "NextMNewStatusBar.h"
 
 #ifdef __WXMSW__
@@ -35,7 +35,6 @@ CNextMFrame::CNextMFrame(wxFrame *frame, const wxString& strTitle)
 
 	m_pStatusBarNew = std::make_unique<CNextMNewStatusBar>(this, wxID_ANY);
 //	m_pStatusBarNew->Create(this);
-
 
 	Initialize();
 	CreateToolBar();

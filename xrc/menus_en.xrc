@@ -180,7 +180,7 @@
 			<object class="separator" />
 			<object class="wxMenuItem" name="m_menuComp_Progress">
 				<label>Compress</label>
-				<accel>F8</accel>
+				<accel></accel>
 				<help></help>
 			</object>
 			<!--

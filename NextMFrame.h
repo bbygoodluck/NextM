@@ -1,7 +1,7 @@
 #ifndef NEXTMFRAME_H_INCLUDED
 #define NEXTMFRAME_H_INCLUDED
 
-class CNextMStatusBar;
+//class CNextMStatusBar;
 class CNextMNewStatusBar;
 
 class CNextMFrame : public wxFrame
@@ -26,7 +26,7 @@ private:
     bool m_bInitialized = false;
 
     wxAuiManager	m_mgr;
-    std::unique_ptr<CNextMStatusBar> m_pStatusBar;
+//	std::unique_ptr<CNextMStatusBar> m_pStatusBar;
     std::unique_ptr<CNextMNewStatusBar> m_pStatusBarNew;
 
     std::unique_ptr<wxAuiToolBar>   m_pAuiToolbar = nullptr;

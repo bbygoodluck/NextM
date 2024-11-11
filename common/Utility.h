@@ -31,10 +31,6 @@ public:
 	//platform 언어가져오기
 	wxString GetSystemLang();
 
-	//이미지리스트 로드
-    void LoadImageList();
-    void GetIconIndex(const wxString& strPath, int &nIconIndex, int &nOverlayIndex, bool bExtFind = false);  //아이콘 인덱스
-
     //실행디렉토리 가져오기
     const wxString& GetWorkDir() const { return m_strWorkingDirectory;  }
 
@@ -42,6 +38,9 @@ public:
     wxString GetPathName(const wxString& strFullPath);
 	//부모 패스정보 가져오기
     wxString GetParentPath(const wxString& strFullPath);
+
+    //파일명 가져오기
+	wxString GetFileName(const wxString& strFullPath, bool IsAppendExt = true);
 
     //FullPath 만들기
     wxString MakeFullPathName(const wxString& strCurrentPath, const wxString& strNewPathName);
@@ -96,6 +95,8 @@ public:
 #ifndef NDEBUG
 	void LogDisplay(const wxString& strMsg);
 #endif
+
+	void SetTopWindow(HWND hWndInsertAfter);
 
 private:
 	void SetWorkingDirectory();

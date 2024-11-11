@@ -60,6 +60,7 @@ CNextMNewStatusBar::CNextMNewStatusBar(wxWindow *parent,
 	m_ctrlMap.insert(std::make_pair(CTRL_Field_X, wxT("m_eMenu_Cut")));
 	m_ctrlMap.insert(std::make_pair(CTRL_Field_V, wxT("m_eMenu_Paste")));
 	m_ctrlMap.insert(std::make_pair(CTRL_Field_M, wxT("m_eMenu_ContextMenu")));
+	m_ctrlMap.insert(std::make_pair(CTRL_Field_F8, wxT("m_eMenu_DecompressF8")));
 	m_ctrlMap.insert(std::make_pair(CTRL_Field_F11, wxT("m_toolMenu_ENV")));
 
 	m_altMap.insert(std::make_pair(ALT_Field_C, wxT("m_fMenu_Copy")));
@@ -458,6 +459,7 @@ void CNextMNewStatusBar::InitCtrlInfo(wxDC* pDC)
 	widths[CTRL_Field_X]     = dispWidth;
 	widths[CTRL_Field_V]     = dispWidth;
 	widths[CTRL_Field_M]     = dispWidth;
+	widths[CTRL_Field_F8]    = dispWidth;
 	widths[CTRL_Field_F11]   = dispWidth;
 
 	SetFieldsCount(CTRL_Field_Max, widths);
@@ -467,6 +469,7 @@ void CNextMNewStatusBar::InitCtrlInfo(wxDC* pDC)
 	SetStatusText(theMsg->GetMessage(wxT("MSG_STATUS_BAR_CUT")), CTRL_Field_X);
 	SetStatusText(theMsg->GetMessage(wxT("MSG_STATUS_BAR_PASTE")), CTRL_Field_V);
 	SetStatusText(theMsg->GetMessage(wxT("MSG_STATUS_BAR_CONTEXT_MENU")), CTRL_Field_M);
+	SetStatusText(theMsg->GetMessage(wxT("MSG_STATUS_BAR_DECOMPRESS")), CTRL_Field_F8);
 	SetStatusText(theMsg->GetMessage(wxT("MSG_STATUS_BAR_OPTION")), CTRL_Field_F11);
 
 	CalcRect(CTRL_Field_Max, widths);
@@ -652,10 +655,27 @@ void CNextMNewStatusBar::OnMouseLBottonDown(wxMouseEvent& event)
 			ExecuteStatusBarClick(m_altMap, m_indxMouseOver);
 		else
 		{
+			switch(m_indxMouseOver)
+			{
+				case Field_F4:
+					_gMenuEvent->GetMenuOperationPtr()->ShowFavoriteFromStatusBar();
+					break;
+
+				case Field_F8:
+					_gMenuEvent->GetMenuOperationPtr()->ShowCompressPopupMenu();
+					break;
+
+				default:
+					ExecuteStatusBarClick(m_defaultMap, m_indxMouseOver);
+					break;
+
+			}
+			/*
 			if(m_indxMouseOver == Field_F4)
 				_gMenuEvent->GetMenuOperationPtr()->ShowFavoriteFromStatusBar();
 			else
 				ExecuteStatusBarClick(m_defaultMap, m_indxMouseOver);
+			*/
 		}
 	}
 

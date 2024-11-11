@@ -100,24 +100,6 @@ void CUtility::Init()
 	larrAttr[2] = 0;//ATTR_SYSTEM;
 }
 
-//이미지리스트 초기
-void CUtility::LoadImageList()
-{
-#ifdef __WXMSW__
-	// IID_IImageList {46EB5926-582E-4017-9FDF-E8998DAA0950}
-	static const GUID IID_IImageList = { 0x46EB5926, 0x582E, 0x4017, { 0x9F, 0xDF, 0xE8, 0x99, 0x8D, 0xAA, 0x9, 0x50 } };
-	// IID_IImageList2 {192B9D83-50FC-457B-90A0-2B82A8B5DAE1}
-	static const GUID IID_IImageList2 = { 0x192B9D83, 0x50FC, 0x457B, { 0x90, 0xA0, 0x2B, 0x82, 0xA8, 0xB5, 0xDA, 0xE1 } };
-
-	_gImageList = nullptr;
-	HRESULT res = SHGetImageList(SHIL_SMALL, IID_IImageList2, (void**)& _gImageList);
-	if (FAILED(res))
-		res = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)& _gImageList);
-#else
-	_gImageList = wxTheFileIconsTable->GetSmallImageList();
-#endif
-}
-
 wxString CUtility::GetPathName(const wxString& strFullPath)
 {
 	if(strFullPath.Len() == 3)
@@ -137,6 +119,19 @@ wxString CUtility::GetParentPath(const wxString& strFullPath)
 	wxFileName::SplitPath(strFullPath, &_strVolume, &_strPath, &_strName, &_strExt);
 
 	return (_strPath.IsEmpty() ? _strVolume + wxT(":") + SLASH : _strVolume + wxT(":") + _strPath);
+}
+
+wxString CUtility::GetFileName(const wxString& strFullPath, bool IsAppendExt)
+{
+	wxString _strpath(wxT(""));
+	wxString _strext(wxT(""));
+	wxString _strpathname(wxT(""));
+
+	wxFileName::SplitPath(strFullPath, &_strpath, &_strpathname, &_strext);
+	if (_strext.IsEmpty())
+		return _strpathname;
+
+	return _strpathname + (IsAppendExt ? wxT(".") + _strext : wxT(""));
 }
 
 void CUtility::RefreshWindow(wxWindow* pWindow, const wxRect& rect, bool bUpdate)
@@ -427,39 +422,6 @@ wxString CUtility::GetFileDescription(const wxString& strExt, const wxString& st
 	return strExtInfo;
 }
 
-void CUtility::GetIconIndex(const wxString& strPath, int &nIconIndex, int &nOverlayIndex, bool bExtFind)
-{
-#ifdef __WXMSW__
-	nIconIndex = 0;
-	nOverlayIndex = 0;
-
-	DWORD dwNum = GetFileAttributes(strPath);
-	DWORD attr = 0;
-
-	attr = dwNum & FILE_ATTRIBUTE_DIRECTORY ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
-
-	SHFILEINFO sfi;
-	wxZeroMemory(sfi);
-
-	UINT flag = IMAGELIST_FLAG;
-
-	if(bExtFind)
-	{
-		attr = 0;
-		flag |= SHGFI_USEFILEATTRIBUTES;
-	}
-
-	SHGetFileInfo(strPath, attr, &sfi, sizeof(sfi), flag);
-
-	nIconIndex = (sfi.iIcon & 0x00FFFFFF);
-	nOverlayIndex = (sfi.iIcon >> 24) - 1;
-
-	DestroyIcon(sfi.hIcon);
-#else
-
-#endif
-}
-
 void CUtility::GetSizeInfo(const double dblFileSize, wxString& strFileSize, wxString& strFileSizeType, wxColour& dispColor)
 {
 	double dblSize = 0.0;
@@ -597,6 +559,11 @@ const char* CUtility::ConvertWC2MB(const wxString& strData)
 	const char *tmp_str = (const char*)tmp_buf;
 
 	return tmp_str;
+}
+
+void CUtility::SetTopWindow(HWND hWndInsertAfter)
+{
+	::SetWindowPos(_gMainFrame->GetHWND(), hWndInsertAfter, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 }
 
 #ifdef __WXMSW__

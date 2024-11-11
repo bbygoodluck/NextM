@@ -13,6 +13,10 @@
 #include "NextMViewManager.h"
 #include "NextMTooltipView.h"
 
+#ifdef __WXMSW__
+	#include "../interface/msw/NextMDropTarget.h"
+#else
+#endif
 struct _HistoryItem
 {
 	int iCurrentIndex;
@@ -76,8 +80,22 @@ public:
 	void SelectAllItemOrRelease(bool bAllSelect);
 
 	wxString GetCurrentPath() const { return m_strCurrentPath; }
+	wxString GetCurrentItem() {
+		std::vector<CNextMDirData>::iterator iter = m_itemList.begin() + m_iCurrentItemIndex;
+		return iter->GetFullPath();
+	}
+
 	void GetSelectedItems(std::list<wxString>& lstSrc, bool IsCut = false);
 
+	//디렉토리인지...파일인지..드라이브인지..
+	/* 1 : dir
+	   2 : file
+	   3 : drive
+	   0 : etc
+	*/
+#ifdef __WXMSW__
+	int DropWindowSelectItemType();
+#endif
 	//아이템존재여부 확인
 	std::vector<CNextMDirData>::iterator FindItem(const wxString& strName);
 
@@ -86,6 +104,14 @@ public:
 
 	int GetBackFowardIndex() { return m_iBackFowardIndex; }
 	void SetBackForwardIndex(int iIndex) { m_iBackFowardIndex = iIndex; }
+
+	wxPoint GetItemPos();
+	//압축 관련
+	void ShowCompressPopupMenu();
+	bool IsAvaliableDecompress();
+
+	bool FindItemInMousePoint(const wxPoint& pt, bool IsMouseMove = false);
+	void SetDnDUpdate();
 
 protected:
 	virtual void Render(wxDC* pDC) = 0;
@@ -140,7 +166,6 @@ protected:
 
 	//마우스이벤트 처리
 	void DoMouseProcess(const wxPoint& pt, bool bDblClick = false);
-	bool FindItemInMousePoint(const wxPoint& pt, bool IsMouseMove = false);
 
 	//키 입력처리
 	void PreTranslateKeyEvent(wxKeyEvent& event);
@@ -179,6 +204,10 @@ private:
 	void DisplaySelectedItemInfo(const wxString& strMsg, int xPos, int yPos);
 	void DisplayRenameTooltip(const wxString& strMsg, int xPos, int yPos);
 	void GotoVisitDirectory();
+
+#ifdef __WXMSW__ //DragDrop
+	HGLOBAL CopySelection();
+#endif
 
 protected:
 	//디스크 스페이스 정보
@@ -251,6 +280,9 @@ protected:
 #ifdef __WXMSW__
 	bool m_bImeMode = false;
 #endif
+
+	bool m_bMouseDown = false;
+
 	// 전체아이템수
 	int	m_iTotalItems         = 0;
 	// 디렉토리수
@@ -283,6 +315,8 @@ protected:
 	//폴더 사이즈
 	double m_dblFileSizeInDir = 0.0f;
 
+	//Drag And Drop Index
+	int m_iDnDBeforeIndex     = -1;
 	// 가장긴 이름
 	wxString m_strMaxName     = wxT("");
 	// 가장긴 파일유형
@@ -295,6 +329,8 @@ protected:
 	//이름변경
 	wxString m_strItemToRename = wxT("");
 
+	//압축파일
+	wxString m_strCompressedFile = wxT("");
 	//표시컬럼
 	COLUMN_VIEW_OPTION m_enumColumnViewOption;
 
@@ -327,7 +363,7 @@ protected:
 	std::unordered_map<int, SELITEM_INFO> m_hashSelectedItem;
 
 	//이미지리스트
-	std::unique_ptr<CImageList> m_pImageList = nullptr;
+//	std::unique_ptr<CImageList> m_pImageList = nullptr;
 
 	// 이름변경 텍스트컨트롤
 	std::unique_ptr<wxTextCtrl> m_pTxtCtrlForRename = nullptr;
@@ -336,6 +372,9 @@ protected:
 	//vector를 이용해서 처리함(디렉토리 탐색은 인덱스로 처리)
 	std::vector<wxString> m_vecVisitDir;
 
+#ifdef __WXMSW__
+	std::unique_ptr<CNextMDropTarget> m_pDropTarget;
+#endif // __WXMSW__
 protected:
 	//Default Event
     void OnCharHook(wxKeyEvent& event);
@@ -348,6 +387,7 @@ protected:
 
 	//마우스 이벤트
 	void OnMouseLBottonDown(wxMouseEvent& event);
+	void OnMouseLBottonUp(wxMouseEvent& event);
 	void OnMouseLButtonDBClick(wxMouseEvent& event);
 	void OnMouseRButtonDown(wxMouseEvent& event);
 	void OnMouseRButtonUp(wxMouseEvent& event);
@@ -380,6 +420,14 @@ protected:
 
 	//디렉토리 번호 표시
 	void OnShowDirectoryNumber(wxCommandEvent& event);
+
+	//압축관련
+
+	//압축메뉴 선택 후..
+	void OnCompressMenuExecute(wxCommandEvent& event);
+	void OnCompressMenuUpdate(wxUpdateUIEvent& event);
+	void OnDeCompressMenuExecute(wxCommandEvent& event);
+
 	wxDECLARE_EVENT_TABLE();
 };
 

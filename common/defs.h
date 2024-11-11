@@ -9,7 +9,7 @@
     ),
 
 #if defined(_UNICODE) || defined(UNICODE)
-	#define CONVSTR(x)        (x.wc_str())
+	#define CONVSTR(x)        (x.wchar_str())
     #define CONVSTR_TO_STD(x) (x.ToStdWstring())
 #else
 	#define CONVSTR(x)        (x.char_str())
@@ -116,5 +116,10 @@ typedef struct _EXTERNAL_EDIT_PROGRAM {
 	wxString _strPGPath = wxT("");
 	wxString _strPGArgs = wxT("");
 } EXTERNAL_EDIT_PROGRAM, *PEXTERNAL_EDIT_PROGRAM;
+
+constexpr int COMPRESS_START_ID     = 32000;
+constexpr int COMPRESS_END_ID       = 32100;
+constexpr int DECOMPRESS_START_ID   = 32200;
+constexpr int DECOMPRESS_END_ID     = 32300;
 
 #endif // DEFS_H_INCLUDED

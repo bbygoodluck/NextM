@@ -2,6 +2,7 @@
 #define NEXTMEXECUTEMENUOPERATION_H_INCLUDED
 
 class CNextMMenuEvent;
+class CFileListView;
 class CNextMExecuteMenuOperation final
 {
 public:
@@ -9,11 +10,20 @@ public:
 	~CNextMExecuteMenuOperation();
 
 public:
+	CFileListView* GetFileListView();
+
 	void ExecuteMenuOperation(int iMenuID, _MENU_EVENT_TYPE _mType);
 	void SetVisitDirDropDownMenu(wxAuiToolBar* tb, wxAuiToolBarEvent& event);
 	void UpdateBackFowrdMenu(wxUpdateUIEvent& event);
 	void GotoBackForwardDirectory(int iBackForwardIndex);
 	void ShowFavoriteFromStatusBar();
+	void ShowCompressPopupMenu();
+
+	//압축 실행
+	void CompressMenu_ExecuteCompress(int nId);
+	void CompressMenu_ExecuteCompress(int nId, const wxString& strCompressedFile);
+	void CompressMenu_ExecuteDecompress(int nId, const wxString& strCompressedFile);
+	void DragDropOperation();
 
 private:
 	void Init();
@@ -56,6 +66,7 @@ private:
 	void CompressMenu_DeCompressMkDir();
 	void CompressMenu_DeCompressSelDir();
 
+	void ShowDecompressMenu();
 	//보기메뉴
 	void ViewMenu_FullScreen();
 	void ViewMenu_Window_Single();
