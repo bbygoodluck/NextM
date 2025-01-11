@@ -68,6 +68,9 @@ HRESULT __stdcall CNextMDropTarget::DragEnter(IDataObject * pDataObject, DWORD g
     fmtetc.lindex   = -1;
     fmtetc.tymed    = TYMED_HGLOBAL;
 
+	if (m_pDropTargetHelper)
+		m_pDropTargetHelper->DragEnter(m_hWnd, pDataObject, (LPPOINT)&pt, *pdwEffect);
+
     // Does the drag source provide CF_HDROP, which is the only format we accept.
     m_bAllowDrop = (NOERROR == pDataObject->QueryGetData(&fmtetc)) ? true : false;
 	if(m_bAllowDrop)
@@ -75,9 +78,6 @@ HRESULT __stdcall CNextMDropTarget::DragEnter(IDataObject * pDataObject, DWORD g
 		QueryDrop(grfKeyState, pdwEffect);
 		theDnD->SetStartDrag(true);
 	}
-
-	if (m_pDropTargetHelper)
-		m_pDropTargetHelper->DragEnter(m_hWnd, pDataObject, (LPPOINT)&pt, *pdwEffect);
 
 	return S_OK;
 }
@@ -89,10 +89,10 @@ HRESULT __stdcall CNextMDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD
 
 	if(m_bAllowDrop)
 	{
-		QueryDrop(grfKeyState, pdwEffect);
-
 		if (m_pDropTargetHelper)
 			m_pDropTargetHelper->DragOver((LPPOINT)&pt, *pdwEffect);
+
+		QueryDrop(grfKeyState, pdwEffect);
 
 		POINT point;
 		point.x = pt.x;
@@ -128,6 +128,9 @@ HRESULT __stdcall CNextMDropTarget::Drop (IDataObject * pDataObject, DWORD grfKe
 
 	if(pdwEffect == 0)
 		return E_POINTER;
+
+	if (m_pDropTargetHelper)
+		m_pDropTargetHelper->Drop(pDataObject, (LPPOINT)&pt, *pdwEffect);
 
 	if(QueryDrop(grfKeyState, pdwEffect))
 	{
@@ -180,9 +183,6 @@ HRESULT __stdcall CNextMDropTarget::Drop (IDataObject * pDataObject, DWORD grfKe
 			ReleaseStgMedium(&medium);
 		}
 	}
-
-	if (m_pDropTargetHelper)
-		m_pDropTargetHelper->Drop(pDataObject, (LPPOINT)&pt, *pdwEffect);
 
 	theDnD->SetStartDrag(false);
 	theDnD->UpdateDropWindow(m_pTargetWindow);

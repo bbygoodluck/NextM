@@ -73,18 +73,14 @@ public:
 		bool m_bFile;
 	} SELITEM_INFO, *PSELITEM_INFO;
 
-	virtual void LoadDirectory(const wxString& strPath) = 0;
+	virtual bool LoadDirectory(const wxString& strPath) = 0;
 	void SelectedItemsClear(bool bDeleted = false);
 
 	//아이템 전체 선택 또는 해제
 	void SelectAllItemOrRelease(bool bAllSelect);
 
 	wxString GetCurrentPath() const { return m_strCurrentPath; }
-	wxString GetCurrentItem() {
-		std::vector<CNextMDirData>::iterator iter = m_itemList.begin() + m_iCurrentItemIndex;
-		return iter->GetFullPath();
-	}
-
+	wxString GetCurrentItem();
 	void GetSelectedItems(std::list<wxString>& lstSrc, bool IsCut = false);
 
 	//디렉토리인지...파일인지..드라이브인지..
@@ -316,7 +312,7 @@ protected:
 	double m_dblFileSizeInDir = 0.0f;
 
 	//Drag And Drop Index
-	int m_iDnDBeforeIndex     = -1;
+	int m_iDnDIndex           = -1;
 	// 가장긴 이름
 	wxString m_strMaxName     = wxT("");
 	// 가장긴 파일유형

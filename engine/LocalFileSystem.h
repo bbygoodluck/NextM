@@ -18,7 +18,7 @@ public:
 	static bool GetAttribute(const wxString& strFilePathName, bool* isDir, unsigned long* lattr, wxLongLong* llSize, wxDateTime* dt);
 	static bool GetStat(const wxString& strPathFileName);
 	static bool CheckCreatable(const wxString& strFilePathName);
-	static enum FILE_TYPE GetFileType(const wxString& path);
+	static unsigned int GetFileType(const wxString& path);
 
 private:
 	bool m_bDirs_only;

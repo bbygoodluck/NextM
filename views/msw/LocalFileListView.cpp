@@ -26,14 +26,22 @@ CLocalFileListView::~CLocalFileListView()
 {
 }
 
-void CLocalFileListView::LoadDirectory(const wxString& strPath)
+bool CLocalFileListView::LoadDirectory(const wxString& strPath)
 {
 	wxBusyCursor wait;
 
+	if(!wxIsReadable(strPath))
+	{
+		wxMessageBox(theMsg->GetMessage(wxT("MSG_DIREDTORY_READ_FAIL")), PROGRAM_FULL_NAME, wxOK | wxICON_ERROR);
+		return false;
+	}
+
 	//파일 시스템 아이콘 읽기 쓰레드 중지
 	StopFileImageRead();
+
 	//초기화
     Initialize();
+
 	//상위디렉토리 이동시 해당 상위 디렉토리의 시작 인덱스를 가져옴
 	_HISTORY::const_iterator fIter = m_hashHistory.find(strPath);
 	if(fIter != m_hashHistory.end())
@@ -60,7 +68,7 @@ void CLocalFileListView::LoadDirectory(const wxString& strPath)
 	if (!localFileSys.BeginFindFiles(strPath, false))
 	{
 		wxMessageBox(theMsg->GetMessage(wxT("MSG_SEARCH_DIR_INIT_ERR")), PROGRAM_FULL_NAME, wxOK | wxICON_ERROR);
-		return;
+		return false;
 	}
 
 	wxString strDesc(wxT(""));
@@ -172,6 +180,8 @@ void CLocalFileListView::LoadDirectory(const wxString& strPath)
 
 	m_bDirLoaded = true;
 	theUtility->RefreshWindow(this, m_viewRect);
+
+	return true;
 }
 
 void CLocalFileListView::InsertDiskDriveItems()
@@ -352,7 +362,8 @@ void CLocalFileListView::DoCreate(CWatcherItem* pItem)
 	wxString strExt(wxT(""));
 	wxString strDesc(wxT(""));
 
-	FILE_TYPE ftype = FTYPE_UNKNOWN;
+//	FILE_TYPE ftype = FTYPE_UNKNOWN;
+	unsigned int ftype = FTYPE_UNKNOWN;
 	ftype = CLocalFileSystem::GetFileType(strFullPath);
 
 	CNextMDirData dirItem;
@@ -519,7 +530,8 @@ void CLocalFileListView::DoModify(CWatcherItem* pItem)
 	wxString strName(pItem->m_strNew);
 	wxString strFullPath = theUtility->MakeFullPathName(m_strCurrentPath, strName);
 
-	FILE_TYPE ftype = FTYPE_UNKNOWN;
+//	FILE_TYPE ftype = FTYPE_UNKNOWN;
+	unsigned int ftype = FTYPE_UNKNOWN;
 	ftype = CLocalFileSystem::GetFileType(strFullPath);
 
 	bool isDir = false;

@@ -12,7 +12,7 @@ public:
 	virtual ~CLocalFileListView();
 
 public:
-	void LoadDirectory(const wxString& strPath) override;
+	bool LoadDirectory(const wxString& strPath) override;
 	void Render(wxDC* pDC) override;
     void ApplyChangedViewSize() override;
 	void GotoTopDir() override;

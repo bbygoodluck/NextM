@@ -70,14 +70,20 @@ bool CNextMDnDCommon::FindDropWindowItem(const wxPoint& pt, wxWindow* pDropWindo
 	   3 : drive
 	   0 : etc
 	*/
-	bool bFound = ((CFileListView *)pDropWindow)->FindItemInMousePoint(pt);
+	bool bFound = ((CFileListView *)pDropWindow)->FindItemInMousePoint(pt, true);
 	if(bFound)
 	{
 		int itemType = ((CFileListView *)pDropWindow)->DropWindowSelectItemType();
+		UpdateDropWindow(pDropWindow);
+
+		if(itemType != 1)
+			bRet = false;
+	/*
 		if(itemType == 1)
-			UpdateDropWindow(pDropWindow);
+		//	UpdateDropWindow(pDropWindow);
 		else
 			bRet = false;
+	*/
 	}
 	else
 		bRet = false;

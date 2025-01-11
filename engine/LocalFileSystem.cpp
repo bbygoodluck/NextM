@@ -44,7 +44,7 @@ bool CLocalFileSystem::BeginFindFiles(wxString path, bool dirs_only)
 		m_strFind_path += wxT("*");
 	}
 
-	m_hFind = FindFirstFileEx(m_strFind_path, FindExInfoBasic, &m_find_data, dirs_only ? FindExSearchLimitToDirectories : FindExSearchNameMatch, NULL, 0);
+	m_hFind = FindFirstFileEx(m_strFind_path, FindExInfoStandard, &m_find_data, dirs_only ? FindExSearchLimitToDirectories : FindExSearchNameMatch, NULL, 0);
 	if (m_hFind == INVALID_HANDLE_VALUE)
 	{
 		m_bfound = false;
@@ -369,7 +369,7 @@ bool CLocalFileSystem::CheckCreatable(const wxString& strFilePathName)
 	return true;
 }
 
-enum FILE_TYPE CLocalFileSystem::GetFileType(const wxString& path)
+unsigned int CLocalFileSystem::GetFileType(const wxString& path)
 {
 #ifdef __WXMSW__
 	DWORD result = GetFileAttributes(path);

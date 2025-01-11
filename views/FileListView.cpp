@@ -309,7 +309,8 @@ void CFileListView::PreTranslateKeyEvent(wxKeyEvent& event)
 			if(!wxFileName::DirExists(strDrive))
 				return;
 
-			LoadDirectory(strDrive);
+			if(!LoadDirectory(strDrive))
+				return;
 
 			theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strDrive, CHANGE_DIR_TAB);
 			theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strDrive, CHANGE_DIR_PATHVIEW);
@@ -594,7 +595,8 @@ bool CFileListView::ProcessEnterKey(int iKeyCode)
 
 	if(bReadDirectory)
 	{
-		LoadDirectory(strSearchDir);
+		if(!LoadDirectory(strSearchDir))
+			return false;
 
 		theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strSearchDir, CHANGE_DIR_TAB);
 		theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strSearchDir, CHANGE_DIR_PATHVIEW);
@@ -869,6 +871,8 @@ void CFileListView::OnMouseLBottonDown(wxMouseEvent& event)
 void CFileListView::OnMouseLBottonUp(wxMouseEvent& event)
 {
 	m_bMouseDown = false;
+	m_bMouseClickItemFound = false;
+	m_iDnDIndex = -1;
 }
 
 void CFileListView::OnMouseLButtonDBClick(wxMouseEvent& event)
@@ -890,6 +894,9 @@ void CFileListView::OnMouseMove(wxMouseEvent& event)
 {
 	if(m_bMouseDown && !theDnD->IsDragging())
 	{
+		if(!m_bMouseClickItemFound)
+			return;
+
 #ifdef __WXMSW__
 		IDataObject *pDataObject;
 		IDropSource *pDropSource;
@@ -987,6 +994,7 @@ void CFileListView::DoMouseProcess(const wxPoint& pt, bool bDblClick)
 
 bool CFileListView::FindItemInMousePoint(const wxPoint& pt, bool IsMouseMove)
 {
+	m_iDnDIndex = -1;
 	bool bFoundOK = false;
 	std::vector<CPositionInfo>::const_iterator cIt = m_posList.begin();
 
@@ -1005,13 +1013,22 @@ bool CFileListView::FindItemInMousePoint(const wxPoint& pt, bool IsMouseMove)
 
 	if(bFoundOK)
 	{
-		if(!IsMouseMove || theDnD->IsDragging())
+		if(!IsMouseMove)
 			m_iCurrentItemIndex = m_iStartIndex + iClickPosIndex;
+		else
+		{
+			if(theDnD->IsDragging())
+			{
+				m_iDnDIndex = m_iStartIndex + iClickPosIndex;
+				std::vector<CNextMDirData>::const_iterator cItData = m_itemList.begin() + m_iDnDIndex;
+				if(!cItData->IsDir())
+					m_iDnDIndex = -1;
+			}
+		}
 	}
 
 	return bFoundOK;
 }
-
 
 void CFileListView::CalcColumn(wxDC* pDC)
 {
@@ -1357,6 +1374,8 @@ void CFileListView::DisplayItems(wxDC* pDC)
 	wxString strSrcName(wxT(""));
 	wxString strFullPathName(wxT(""));
 
+	m_iCurrentItemIndex;
+
 	for (int iIndex = m_iStartIndex; iIndex < iDisplayItemCount; iIndex++)
 	{
 		if (iIndex >= m_iTotalItems)
@@ -1406,6 +1425,7 @@ void CFileListView::DisplayItems(wxDC* pDC)
 		if (bSelected)
 			dispColor = wxColour(255, 255, 80);
 
+
 		if (m_iCurrentItemIndex == iIndex)
 		{
 			DisplayDetailInfo(pDC, *Iter, iIconIndex, iOverlayIconIndex);
@@ -1416,27 +1436,16 @@ void CFileListView::DisplayItems(wxDC* pDC)
 			wxPen   pen;
 			wxBrush brush;
 
-			if(theDnD->IsDragging())
+			//포커스가 없는경우
+			if (!m_bSetFocus)
 			{
-				if(isDir)
-				{
-					pen = wxPen(wxColour(255, 255, 0), 1, wxPENSTYLE_DOT);
-					brush = wxColour(40, 40, 40);
-				}
+				pen = wxPen(wxColour(30, 30, 30), 1);
+				brush = wxColour(30, 30, 30);
 			}
 			else
 			{
-				//포커스가 없는경우
-				if (!m_bSetFocus)
-				{
-					pen = wxPen(wxColour(30, 30, 30), 1);
-					brush = wxColour(30, 30, 30);
-				}
-				else
-				{
-					pen = dispColor;
-					brush = dispColor;
-				}
+				pen = dispColor;
+				brush = dispColor;
 			}
 
 			pDC->SetPen(pen);
@@ -1444,18 +1453,11 @@ void CFileListView::DisplayItems(wxDC* pDC)
 
 			pDC->DrawRectangle(rcFillRect);
 
-			if(theDnD->IsDragging())
-			{
-				dispColor = wxColour(128, 128, 150);
-			}
+			//포커스가 없는경우
+			if (!m_bSetFocus)
+				dispColor = wxColour(90, 90, 90);
 			else
-			{
-				//포커스가 없는경우
-				if (!m_bSetFocus)
-					dispColor = wxColour(90, 90, 90);
-				else
-					dispColor = wxColour(0, 0, 0);
-			}
+				dispColor = wxColour(0, 0, 0);
 		}
 		else
 		{
@@ -1474,6 +1476,28 @@ void CFileListView::DisplayItems(wxDC* pDC)
 
 				pDC->SetPen(wxNullPen);
 				pDC->SetBrush(wxNullBrush);
+			}
+		}
+
+		if(theDnD->IsDragging())
+		{
+			wxRect rcFillRect(posInfo.m_mainRect);
+			rcFillRect.SetBottom(rcFillRect.GetBottom() + 1);
+
+			wxPen   pen;
+			wxBrush brush;
+
+			if(isDir && (m_iDnDIndex == iIndex))
+			{
+				pen = wxPen(wxColour(255, 255, 0), 1, wxPENSTYLE_DOT);
+				brush = wxColour(40, 40, 40);
+
+				pDC->SetPen(pen);
+				pDC->SetBrush(brush);
+
+				pDC->DrawRectangle(rcFillRect);
+
+				dispColor = wxColour(128, 128, 150);
 			}
 		}
 
@@ -2526,7 +2550,8 @@ void CFileListView::GotoVisitDirectory()
 
 	wxString strVisitDir = *cit;
 
-	LoadDirectory(strVisitDir);
+	if(!LoadDirectory(strVisitDir))
+		return;
 
 	theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strVisitDir, CHANGE_DIR_TAB);
 	theSplitterManager->GetCurrentViewManager()->ChangeDirectoryPath(strVisitDir, CHANGE_DIR_PATHVIEW);
@@ -2660,12 +2685,24 @@ void CFileListView::SetDnDUpdate()
 
 int CFileListView::DropWindowSelectItemType()
 {
-	std::vector<CNextMDirData>::iterator iter = m_itemList.begin() + m_iCurrentItemIndex;
 	int iType = 0;
-	if(iter->IsDir())
-		iType = 1;
+	if(m_iDnDIndex != -1)
+	{
+		std::vector<CNextMDirData>::iterator iter = m_itemList.begin() + m_iDnDIndex;
+
+		if(iter->IsDir())
+			iType = 1;
+	}
 
 	return iType;
+}
+
+wxString CFileListView::GetCurrentItem()
+{
+	int itemIndex = theDnD->IsDragging() ? m_iDnDIndex : m_iCurrentItemIndex;
+
+	std::vector<CNextMDirData>::iterator iter = m_itemList.begin() + itemIndex;
+	return iter->GetFullPath();
 }
 
 #ifdef __WXMSW__
