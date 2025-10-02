@@ -8,7 +8,10 @@ CMemoryDC::CMemoryDC()
 
 CMemoryDC::~CMemoryDC()
 {
+	if(m_pDoubleBuffer)
+		delete m_pDoubleBuffer;
 
+	m_pDoubleBuffer = nullptr;
 }
 
 void CMemoryDC::CreateMemoryBuffer(wxDC* pDC)
@@ -20,7 +23,18 @@ void CMemoryDC::CreateMemoryBuffer(wxDC* pDC)
 	}
 }
 
-wxMemoryDC* CMemoryDC::CreateMemoryDC(wxDC* pDC, const wxRect& rc, const wxColour& colPen, const wxColour colBrush)
+wxMemoryDC* CMemoryDC::SelectObjectOnly(wxDC* pDC, const wxRect& rc)
+{
+	m_rc = rc;
+	CreateMemoryBuffer(pDC);
+
+	DetachDC();
+
+	m_pMemDC->SelectObject(*m_pDoubleBuffer);
+	return m_pMemDC.get();
+}
+
+wxMemoryDC* CMemoryDC::CreateMemoryDC(wxDC* pDC, const wxRect& rc, const wxColour& colPen, const wxColour& colBrush)
 {
 	m_rc = rc;
 	CreateMemoryBuffer(pDC);
@@ -35,7 +49,7 @@ wxMemoryDC* CMemoryDC::CreateMemoryDC(wxDC* pDC, const wxRect& rc, const wxColou
 	return m_pMemDC.get();
 }
 
-wxMemoryDC* CMemoryDC::CreateRoundRectMemoryDC(wxDC* pDC, const wxRect& rc, double dblradius, const wxColour& colPen, const wxColour colBrush)
+wxMemoryDC* CMemoryDC::CreateRoundRectMemoryDC(wxDC* pDC, const wxRect& rc, double dblradius, const wxColour& colPen, const wxColour& colBrush)
 {
 	CreateMemoryBuffer(pDC);
 

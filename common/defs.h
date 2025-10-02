@@ -111,6 +111,8 @@ constexpr int EXTERNAL_PROGRAM_END_ID   = 31010;
 constexpr int wxBACKFORWARD_START = 32000;
 constexpr int wxBACKFORWARD_END   = 32500;
 
+static int wxTIMER_ID           = 100;
+
 typedef struct _EXTERNAL_EDIT_PROGRAM {
 	wxString _strPGName = wxT("");
 	wxString _strPGPath = wxT("");
@@ -121,5 +123,14 @@ constexpr int COMPRESS_START_ID     = 32000;
 constexpr int COMPRESS_END_ID       = 32100;
 constexpr int DECOMPRESS_START_ID   = 32200;
 constexpr int DECOMPRESS_END_ID     = 32300;
+
+constexpr int PROCESSVIEW_CONTEXT_MENU_START = wxID_HIGHEST + 8000;
+constexpr int PROCESSVIEW_CONTEXT_MENU_END   = PROCESSVIEW_CONTEXT_MENU_START + 30;
+
+constexpr int KILL_PROCESS_MSG_NOT_PROCESSID          = -100;
+constexpr int KILL_PROCESS_MSG_PROCESS_NULL           = -101;
+constexpr int KILL_PROCESS_MSG_PROCESS_TERMINATE_FAIL = -102;
+constexpr int KILL_PROCESS_MSG_PROCESS_ALIVE          = -103;
+constexpr int KILL_PROCESS_MSG_SUCCESS = 0;
 
 #endif // DEFS_H_INCLUDED

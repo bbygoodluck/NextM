@@ -150,6 +150,9 @@ void CFileListView::Initialize()
 //	if(itemCapacity > 1000)
 //		m_itemList.reserve(500);
 
+	//마우스 클릭에 대한 아이템 찾기 플래그
+	m_bMouseClickItemFound = false;
+
 	//화면 변경 플래그
 	//최초수행시는 true 로 설정
 	m_bSizeOrColumnChanged = true;
@@ -872,6 +875,7 @@ void CFileListView::OnMouseLBottonUp(wxMouseEvent& event)
 {
 	m_bMouseDown = false;
 	m_bMouseClickItemFound = false;
+
 	m_iDnDIndex = -1;
 }
 
@@ -2223,7 +2227,7 @@ void CFileListView::RenameOn(const wxString& strRename)
 	}
 
 	m_pTxtCtrlForRename->SetSize(wxRect(iPosX1, iPosY1, iPosX2, iPosY2));
-	m_pTxtCtrlForRename->SetLabelText(strRename);
+	m_pTxtCtrlForRename->SetValue(strRename);
 	m_pTxtCtrlForRename->SetSelection(0, iLength);
 	m_pTxtCtrlForRename->Show(true);
 	m_pTxtCtrlForRename->SetFocus();
@@ -2295,7 +2299,7 @@ void CFileListView::OnKeyDownTextCtrl(wxKeyEvent& event)
 	if (iKeyCode == WXK_ESCAPE)
 	{
 		m_bRename = false;
-		m_pTxtCtrlForRename->SetLabelText(wxT(""));
+		m_pTxtCtrlForRename->SetValue(wxT(""));
 		m_pTxtCtrlForRename->Show(false);
 
 		m_pRenameTooltip->Show(false);
@@ -2306,7 +2310,7 @@ void CFileListView::OnKillFocusTxtCtrl(wxFocusEvent& event)
 {
 	event.Skip();
 
-	m_pTxtCtrlForRename->SetLabelText(wxT(""));
+	m_pTxtCtrlForRename->SetValue(wxT(""));
 	m_pTxtCtrlForRename->Show(false);
 
 	m_pRenameTooltip->Show(false);

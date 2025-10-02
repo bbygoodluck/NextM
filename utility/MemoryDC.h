@@ -8,8 +8,9 @@ public:
     ~CMemoryDC();
 
 public:
-    wxMemoryDC* CreateMemoryDC(wxDC* pDC, const wxRect& rc, const wxColour& colPen = wxColour(0, 0, 0), const wxColour colBrush = wxColour(0, 0, 0));
-    wxMemoryDC* CreateRoundRectMemoryDC(wxDC* pDC, const wxRect& rc, double dblradius, const wxColour& colPen = wxColour(0, 0, 0), const wxColour colBrush = wxColour(0, 0, 0));
+    wxMemoryDC* SelectObjectOnly(wxDC* pDC, const wxRect& rc);
+    wxMemoryDC* CreateMemoryDC(wxDC* pDC, const wxRect& rc, const wxColour& colPen = wxColour(0, 0, 0), const wxColour& colBrush = wxColour(0, 0, 0));
+    wxMemoryDC* CreateRoundRectMemoryDC(wxDC* pDC, const wxRect& rc, double dblradius, const wxColour& colPen = wxColour(0, 0, 0), const wxColour& colBrush = wxColour(0, 0, 0));
     void ClearMemoryDC(wxMemoryDC* pMemDC);
 	void ClearMemoryDC();
 

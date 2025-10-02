@@ -36,14 +36,14 @@ public:
 		m_bCompress = bCompress;
 	}
 
-	const IsCompress() const { return m_bCompress; }
+	bool IsCompress() const { return m_bCompress; }
 	void SetItemsInfo(const std::list<wxString>& lstDatas, const wxString& strCompresssedFile, const wxString& strTargetDir, int nType, const wxString& strPassword);
 
 private:
 	void InitDecompressInformation();
-	void DoCompress(const bit7z::BitArchiveWriter& archive, wxDialog* pOwnerDialog);
-	void DoDecompress(const bit7z::BitFileExtractor& extractor, wxDialog* pOwnerDialog);
-	void DoDecompress(const bit7z::BitArchiveReader& reader, wxDialog* pOwnerDialog);
+	void DoCompress(bit7z::BitArchiveWriter& archive, wxDialog* pOwnerDialog);
+	void DoDecompress(bit7z::BitFileExtractor& extractor, wxDialog* pOwnerDialog);
+	void DoDecompress(bit7z::BitArchiveReader& reader, wxDialog* pOwnerDialog);
 
 	void MakeExtractDir();
 

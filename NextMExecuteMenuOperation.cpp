@@ -15,6 +15,10 @@
 #include "./dialog/wxMozillaLikeAboutBoxDialog.h"
 #include "./dialog/header_png.h"
 
+//2025.01.14 Added Start
+#include "./dialog/DlgSystemResource.h"
+//2025.01.14 Added End
+
 CNextMExecuteMenuOperation::CNextMExecuteMenuOperation(CNextMMenuEvent* pMenuEvent)
 	: m_pMenuEvent(pMenuEvent)
 {
@@ -637,6 +641,8 @@ void CNextMExecuteMenuOperation::CompressMenu_ExecuteCompress(int nId)
 
 void CNextMExecuteMenuOperation::CompressMenu_ExecuteCompress(int nId, const wxString& strCompressedFile)
 {
+    wxString strCompFile(strCompressedFile);
+
 	std::list<wxString> lstSrc;
 
 	CFileListView* pFileListView = GetFileListView();
@@ -657,7 +663,7 @@ void CNextMExecuteMenuOperation::CompressMenu_ExecuteCompress(int nId, const wxS
 	wxString strCompressedPath(wxT(""));
 	wxString strCompressedName(wxT(""));
 
-	if(strCompressedFile.CmpNoCase(wxT("")) == 0)
+	if(strCompFile.CmpNoCase(wxT("")) == 0)
 	{
 		if(lstSrc.size() == 1)
 		{
@@ -669,11 +675,11 @@ void CNextMExecuteMenuOperation::CompressMenu_ExecuteCompress(int nId, const wxS
 			strCompressedName = strFullPath.Len() == 3 ? strFullPath.Left(1) : theUtility->GetPathName(strFullPath);
 
 		strCompressedPath = strFullPath.Len() == 3 ? strFullPath : strFullPath + SLASH;
-		strCompressedFile = strCompressedPath + strCompressedName + wxT(".") + strCompressedExt;
+		strCompFile = strCompressedPath + strCompressedName + wxT(".") + strCompressedExt;
 	}
 
 	DlgCompress dlg(_gMainFrame);
-	dlg.SetCompressInfo(lstSrc, strCompressedFile, wxT(""), strCompressedExt);
+	dlg.SetCompressInfo(lstSrc, strCompFile, wxT(""), strCompressedExt);
 	dlg.ShowModal();
 	dlg.Destroy();
 }
@@ -892,6 +898,10 @@ void CNextMExecuteMenuOperation::FavoriteMenu_ItemSelected(int iMenuID)
 //System메뉴
 void CNextMExecuteMenuOperation::SystemMenu_ResourceUsage()
 {
+	DlgSystemResource dlgSys(_gMainFrame);
+
+	dlgSys.ShowModal();
+	dlgSys.Destroy();
 }
 
 void CNextMExecuteMenuOperation::SystemMenu_DiskUsage()

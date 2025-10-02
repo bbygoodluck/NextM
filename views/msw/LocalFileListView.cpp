@@ -362,8 +362,7 @@ void CLocalFileListView::DoCreate(CWatcherItem* pItem)
 	wxString strExt(wxT(""));
 	wxString strDesc(wxT(""));
 
-//	FILE_TYPE ftype = FTYPE_UNKNOWN;
-	unsigned int ftype = FTYPE_UNKNOWN;
+	int ftype = FTYPE_UNKNOWN;
 	ftype = CLocalFileSystem::GetFileType(strFullPath);
 
 	CNextMDirData dirItem;
@@ -530,8 +529,7 @@ void CLocalFileListView::DoModify(CWatcherItem* pItem)
 	wxString strName(pItem->m_strNew);
 	wxString strFullPath = theUtility->MakeFullPathName(m_strCurrentPath, strName);
 
-//	FILE_TYPE ftype = FTYPE_UNKNOWN;
-	unsigned int ftype = FTYPE_UNKNOWN;
+	int ftype = FTYPE_UNKNOWN;
 	ftype = CLocalFileSystem::GetFileType(strFullPath);
 
 	bool isDir = false;

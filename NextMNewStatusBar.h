@@ -27,11 +27,11 @@ public:
 
     void SetWidth(int width) { m_nWidth = width; }
     void SetRect(const wxRect& rc) { m_rect = rc;}
-    void SetTextAlignment(wxAlignment align) {
+    void SetTextAlignment(int align) {
 		m_textAligment = align;
     }
 
-    wxAlignment GetAlign() {
+    int GetAlign() {
     	return m_textAligment;
     }
 
@@ -59,7 +59,8 @@ private:
     wxColour m_colMouseOverText = wxColour(0, 0, 0);
     wxColour m_colMouseOverBackground = wxColour(255, 255, 128);
 
-    wxAlignment m_textAligment = wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT;
+    //wxAlignment m_textAligment = wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT;
+    int m_textAligment = wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT;
 };
 
 WX_DECLARE_EXPORTED_OBJARRAY(CNextMStatusBarItem, NextMStatusBarItemArray);

@@ -315,8 +315,8 @@ void CPathView::OnMouseMove(wxMouseEvent& event)
 	wxPoint ptMouse = event.GetPosition();
 	wxString strToolTipPath(wxT(""));
 
-	std::vector<CPathItemData>::const_iterator iter = m_vecPathDatas.begin();
-	for (iter; iter != m_vecPathDatas.end(); iter++)
+	std::vector<CPathItemData>::const_iterator iter;// = m_vecPathDatas.begin();
+	for (iter = m_vecPathDatas.begin(); iter != m_vecPathDatas.end(); iter++)
 	{
 		if (iter->m_rcDisp.Contains(ptMouse))
 		{
@@ -348,17 +348,16 @@ void CPathView::OnMouseLButtonClick(wxMouseEvent& event)
 		int iPathCount = m_vecPathDatas.size();
 		int iIndex;
 
-        iIndex = 0;
-/*
-	#ifdef __WXMSW__
-		iIndex = 1;
-	#else
-		iIndex = 0;
-	#endif
-*/
-		for(iIndex; iIndex <= m_iMouseOverIndex; iIndex++)
+		int indxStart = 0;
+//	#ifdef __WXMSW__
+//		indxStart = 1;
+//	#else
+//		indxStart = 0;
+//	#endif
+
+		for(iIndex = indxStart; iIndex <= m_iMouseOverIndex; iIndex++)
 		{
-			if(iIndex > wx_static_cast(int, m_vecPathDatas.size()))
+			if(iIndex > iPathCount)//wx_static_cast(int, m_vecPathDatas.size()))
 				break;
 
 			std::vector<CPathItemData>::const_iterator cIt = m_vecPathDatas.begin() + iIndex;
@@ -374,7 +373,7 @@ void CPathView::OnMouseLButtonClick(wxMouseEvent& event)
 
 void CPathView::OnMouseDBClick(wxMouseEvent& event)
 {
-	m_pTxtCtrl->SetLabelText(m_strPath);
+	m_pTxtCtrl->SetValue(m_strPath);
 	m_pTxtCtrl->SetSize(m_viewRect);
 	m_pTxtCtrl->SetInsertionPointEnd();
 	m_pTxtCtrl->Show(true);
@@ -383,23 +382,24 @@ void CPathView::OnMouseDBClick(wxMouseEvent& event)
 
 void CPathView::OnMouseRButtonClick(wxMouseEvent& event)
 {
+	wxString strNewPath{wxT("")};
+	wxWindow* pWnd = static_cast<wxWindow *>(event.GetEventObject());
+
 	if(m_bFounded)
 	{
-		wxString strNewPath(wxT(""));
 		int iPathCount = m_vecPathDatas.size();
 		int iIndex;
 
-        iIndex = 0;
-/*
-	#ifdef __WXMSW__
-		iIndex = 1;
-	#else
-		iIndex = 0;
-	#endif
-*/
-		for(iIndex; iIndex <= m_iMouseOverIndex; iIndex++)
+		int indxStart = 0;
+//	#ifdef __WXMSW__
+//		indxStart = 1;
+//	#else
+//		indxStart = 0;
+//	#endif
+
+		for(iIndex = indxStart; iIndex <= m_iMouseOverIndex; iIndex++)
 		{
-			if(iIndex > wx_static_cast(int, m_vecPathDatas.size()))
+			if(iIndex > iPathCount)//wx_static_cast(int, m_vecPathDatas.size()))
 				break;
 
 			std::vector<CPathItemData>::const_iterator cIt = m_vecPathDatas.begin() + iIndex;
@@ -409,7 +409,6 @@ void CPathView::OnMouseRButtonClick(wxMouseEvent& event)
 		}
 
 		iIndex = 0;
-		wxWindow* pWnd = static_cast<wxWindow *>(event.GetEventObject());
 		wxMenu menuPopup;
 #ifdef __WXMSW__
 		if(m_iMouseOverIndex == 0)
@@ -441,65 +440,86 @@ void CPathView::OnMouseRButtonClick(wxMouseEvent& event)
 			return;
 		}
 #endif
+		ShowPopupPath(strNewPath, pWnd);
+	}
+	else
+	{
+		wxPoint pt = event.GetPosition();
 
+		std::vector<CPathItemData>::const_iterator cIt = m_vecPathDatas.begin();
+
+		m_rcClick.SetLeft(pt.x);
+		m_rcClick.SetTop(pt.y);
+		m_rcClick.SetRight(pt.x + 10);
+		m_rcClick.SetTop(cIt->m_rcDisp.GetHeight() - 5);
+
+		strNewPath = cIt->m_strName;
+		ShowPopupPath(strNewPath, pWnd);
+	}
+}
+
+void CPathView::ShowPopupPath(const wxString& strPath, wxWindow* pWnd)
+{
 #ifdef __WXMSW__
 
-	#ifdef _UNICODE
-		typedef WIN32_FIND_DATAW WIN32_DATA;
-	#else
-		typedef WIN32_FIND_DATA WIN32_DATA;
-	#endif
+#ifdef _UNICODE
+	typedef WIN32_FIND_DATAW WIN32_DATA;
+#else
+	typedef WIN32_FIND_DATA WIN32_DATA;
+#endif
 
-		wxString strFindDir = strNewPath;
-		if(strNewPath.Right(1).CmpNoCase(SLASH) != 0)
-		{
-			strNewPath += SLASH;
+	wxString strFindDir{strPath};
+	wxString strNewPath{strPath};
 
-			strFindDir += SLASH;
-			strFindDir += wxT("*");
-		}
-		else
-			strFindDir += wxT("*");
+	if(strNewPath.Right(1).CmpNoCase(SLASH) != 0)
+	{
+		strNewPath += SLASH;
 
-		WIN32_DATA fd;
-		HANDLE hFind;
-		bool bFound = false;
+		strFindDir += SLASH;
+		strFindDir += wxT("*");
+	}
+	else
+		strFindDir += wxT("*");
 
-		hFind = FindFirstFileEx(strFindDir, FindExInfoStandard, &fd, FindExSearchLimitToDirectories, NULL, 0);
-		if(hFind == INVALID_HANDLE_VALUE)
-			return;
+	WIN32_DATA fd;
+	HANDLE hFind;
+	bool bFound = false;
 
-		m_subdirMap.clear();
-		wxBitmap bmp = wxArtProvider::GetBitmap(wxART_NEW_DIR, wxART_MENU, wxSize(16,16));
+	hFind = FindFirstFileEx(strFindDir, FindExInfoStandard, &fd, FindExSearchLimitToDirectories, NULL, 0);
+	if(hFind == INVALID_HANDLE_VALUE)
+		return;
 
-		bFound = true;
-		iIndex = 0;
+	m_subdirMap.clear();
+	wxBitmap bmp = wxArtProvider::GetBitmap(wxART_NEW_DIR, wxART_MENU, wxSize(16,16));
 
-		do
-		{
-			if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-				continue;
+	bFound = true;
+	int iIndex = 0;
 
-			wxString strName(fd.cFileName);
-			if(strName.CmpNoCase(wxT(".")) == 0 || strName.CmpNoCase(wxT("..")) == 0)
-				continue;
+	wxMenu menuPopup;
 
-			wxMenuItem* menu = menuPopup.Append(wxSUBDIR_START + iIndex, strName);
+	do
+	{
+		if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			continue;
 
-			wxString strFullPath = strNewPath + strName;
-			m_subdirMap.insert(std::make_pair(wxSUBDIR_START + iIndex, strFullPath));
+		wxString strName(fd.cFileName);
+		if(strName.CmpNoCase(wxT(".")) == 0 || strName.CmpNoCase(wxT("..")) == 0)
+			continue;
 
-			iIndex++;
-		} while ((bFound = FindNextFile(hFind, &fd) != 0));
+		wxMenuItem* menu = menuPopup.Append(wxSUBDIR_START + iIndex, strName);
 
-		wxPoint pt = pWnd->ClientToScreen(m_rcClick.GetBottomLeft());
-		pt = ScreenToClient(pt);
+		wxString strFullPath = strNewPath + strName;
+		m_subdirMap.insert(std::make_pair(wxSUBDIR_START + iIndex, strFullPath));
 
-		this->PopupMenu(&menuPopup, pt);
+		iIndex++;
+	} while ((bFound = FindNextFile(hFind, &fd) != 0));
+
+	wxPoint pt = pWnd->ClientToScreen(m_rcClick.GetBottomLeft());
+	pt = ScreenToClient(pt);
+
+	this->PopupMenu(&menuPopup, pt);
 
 #endif // __WXMSW__
-
-	}
 }
 
 void CPathView::OnLeaveWindow(wxMouseEvent& event)
@@ -536,7 +556,7 @@ void CPathView::OnEnterTextCtrl(wxCommandEvent& event)
 
 	UpdatePath(strNewPath);
 
-	m_pTxtCtrl->SetLabelText(wxT(""));
+	m_pTxtCtrl->SetValue(wxT(""));
 	m_pTxtCtrl->Show(false);
 
 	theSplitterManager->GetCurrentViewManager()->SetFocusPage();
@@ -547,7 +567,7 @@ void CPathView::OnKeyDownTextCtrl(wxKeyEvent& event)
 	int iKeyCode = event.GetKeyCode();
 	if (iKeyCode == WXK_ESCAPE)
 	{
-		m_pTxtCtrl->SetLabelText(wxT(""));
+		m_pTxtCtrl->SetValue(wxT(""));
 		m_pTxtCtrl->Show(false);
 
 
@@ -559,7 +579,7 @@ void CPathView::OnKeyDownTextCtrl(wxKeyEvent& event)
 
 void CPathView::OnKillFocusTxtCtrl(wxFocusEvent& event)
 {
-	m_pTxtCtrl->SetLabelText(wxT(""));
+	m_pTxtCtrl->SetValue(wxT(""));
 	m_pTxtCtrl->Show(false);
 
 	event.Skip();

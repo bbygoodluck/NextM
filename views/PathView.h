@@ -45,6 +45,7 @@ private:
 
 	void AddPathPolygon(wxDC* pDC, const wxString& strPath, int iPrevIndex);
 	void UpdatePath(const wxString& strPath);
+	void ShowPopupPath(const wxString& strPath, wxWindow* pWnd);
 
 private:
 	wxIcon m_icoDrive;

@@ -206,7 +206,7 @@ wxThread::ExitCode CComDecImpl::Entry()
 	return (wxThread::ExitCode)0;
 }
 
-void CComDecImpl::DoCompress(const bit7z::BitArchiveWriter& archive, wxDialog* pOwnerDialog)
+void CComDecImpl::DoCompress(bit7z::BitArchiveWriter& archive, wxDialog* pOwnerDialog)
 {
 	std::list<wxString>::const_iterator cItStart = m_lstDatas.begin();
 	std::list<wxString>::const_iterator cItEnd = m_lstDatas.end();
@@ -281,7 +281,7 @@ void CComDecImpl::MakeExtractDir()
 		wxMkDir(m_strTargetDir);
 }
 
-void CComDecImpl::DoDecompress(const bit7z::BitFileExtractor& extractor, wxDialog* pOwnerDialog)
+void CComDecImpl::DoDecompress(bit7z::BitFileExtractor& extractor, wxDialog* pOwnerDialog)
 {
 	extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
 
@@ -311,7 +311,7 @@ void CComDecImpl::DoDecompress(const bit7z::BitFileExtractor& extractor, wxDialo
 	extractor.extract(CONVSTR_TO_STD(m_strCompressedFile), CONVSTR_TO_STD(m_strTargetDir));
 }
 
-void CComDecImpl::DoDecompress(const bit7z::BitArchiveReader& reader, wxDialog* pOwnerDialog)
+void CComDecImpl::DoDecompress(bit7z::BitArchiveReader& reader, wxDialog* pOwnerDialog)
 {
 	if(reader.isPasswordDefined())
 	{

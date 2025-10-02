@@ -19,6 +19,9 @@
 #include <wx/busyinfo.h>
 
 #ifdef __WXMSW__
+	#define _WIN32_DCOM
+	#include <comdef.h>
+	#include <wbemidl.h>
 	#include <wx/msw/private.h>
 	#include <windows.h>
 	#include <CommCtrl.h>
@@ -109,4 +112,7 @@
 #include "../compress/ComDecCommon.h"
 #define theComDec           (CComDecCommon::Get())
 
+//시스템관련
+#include "../system/System.h"
+#define theSystem           (CSystem::Get())
 #endif // COMMON_H_INCLUDED

@@ -369,7 +369,7 @@ bool CLocalFileSystem::CheckCreatable(const wxString& strFilePathName)
 	return true;
 }
 
-unsigned int CLocalFileSystem::GetFileType(const wxString& path)
+int CLocalFileSystem::GetFileType(const wxString& path)
 {
 #ifdef __WXMSW__
 	DWORD result = GetFileAttributes(path);
@@ -379,8 +379,8 @@ unsigned int CLocalFileSystem::GetFileType(const wxString& path)
 //	WIN32_FILE_ATTRIBUTE_DATA fileAttr = { 0, };
 //	BOOL result = GetFileAttributesEx(path, GetFileExInfoStandard, &fileAttr);
 
-	if (result == INVALID_FILE_ATTRIBUTES)
-		return FTYPE_UNKNOWN;
+//	if (fileAttr.dwFileAttributes == INVALID_FILE_ATTRIBUTES)
+//		return FTYPE_UNKNOWN;
 
 
 	const unsigned long attrubute_mapping[][2] = {
@@ -393,8 +393,9 @@ unsigned int CLocalFileSystem::GetFileType(const wxString& path)
 
 	for (unsigned long i = 0; i < WXSIZEOF(attrubute_mapping); ++i)
 	{
+//		if(fileAttr.dwFileAttributes && attrubute_mapping[i][0])
 		if (result & attrubute_mapping[i][0])
-			return attrubute_mapping[i][1];
+			return (int)attrubute_mapping[i][1];
 	}
 	/*
 	if (result & FILE_ATTRIBUTE_DIRECTORY)

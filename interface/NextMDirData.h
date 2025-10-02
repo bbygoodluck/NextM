@@ -125,10 +125,10 @@ public:
 	wxString GetVolume() const { return m_strVolume; }
 
 	void SetDriveName(const wxString& strDriveName) { m_strDriveName = strDriveName; }
-	wxString GetDriveName() { return m_strDriveName; }
+	wxString GetDriveName() const { return m_strDriveName; }
 
 	void SetDisplayName(const wxString& strDisplayName) { m_strDisplayName = strDisplayName; }
-	wxString GetDisplayName() { return m_strDisplayName; }
+	wxString GetDisplayName() const { return m_strDisplayName; }
 
 	//드라이브 용량정보
 	void SetDriveSpaceInfo(const wxString& strDriveSpaceInfo) { m_strDriveSpace = strDriveSpaceInfo; }

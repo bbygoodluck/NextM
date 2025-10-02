@@ -42,7 +42,7 @@ bool CNextMApp::OnInit()
 	strTitle += wxT(" - Debug Version");
 #endif
 
-	strTitle += wxT("(Beta) - Made by BaeByoungYong");
+	strTitle += wxT(" - Made by BaeByoungYong");
 	CNextMFrame* pMainFrame = new CNextMFrame(0L, strTitle);
 
 	_gMainFrame = pMainFrame;

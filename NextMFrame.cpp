@@ -43,7 +43,7 @@ CNextMFrame::CNextMFrame(wxFrame *frame, const wxString& strTitle)
 
 	m_mgr.SetManagedWindow(this);
 	m_mgr.AddPane(theSplitterManager->GetSplitterWnd(), wxAuiPaneInfo().CenterPane().PaneBorder(false));
-	m_mgr.AddPane(m_pStatusBarNew.get(), wxAuiPaneInfo().CenterPane().Bottom().DockFixed().CaptionVisible(false).CloseButton(false).PaneBorder(false));
+	m_mgr.AddPane(m_pStatusBarNew.get(), wxAuiPaneInfo().BestSize(wxSize(-1, 22)).CenterPane().Bottom().DockFixed().CaptionVisible(false).CloseButton(false).PaneBorder(false));
 	m_mgr.Update();
 
 	m_bInitialized = true;

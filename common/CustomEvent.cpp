@@ -41,3 +41,5 @@ wxDEFINE_EVENT(wxEVT_COMPRESS_EXEC, wxCommandEvent);
 
 //DnD
 wxDEFINE_EVENT(wxEVT_DRAGDROP_OPERATION, wxCommandEvent);
+//Resource Monitoring
+wxDEFINE_EVENT(wxEVT_RESOURCE_MONITORING, wxCommandEvent);

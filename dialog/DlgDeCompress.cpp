@@ -51,7 +51,7 @@ DlgDeCompress::DlgDeCompress( wxWindow* parent, wxWindowID id, const wxString& t
 	wxBoxSizer* bSizer5;
 	bSizer5 = new wxBoxSizer( wxVERTICAL );
 
-	m_staticPercent = new wxStaticText( this, wxID_ANY, wxT("0%"), wxDefaultPosition, wxSize(26, -1), 0 );
+	m_staticPercent = new wxStaticText( this, wxID_ANY, wxT("0%"), wxDefaultPosition, wxSize(29, -1), 0 );
 	m_staticPercent->Wrap( -1 );
 	bSizer5->Add( m_staticPercent, 0, wxALIGN_RIGHT|wxSHAPED, 5 );
 
