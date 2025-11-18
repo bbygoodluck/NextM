@@ -33,7 +33,7 @@ ULONG STDMETHODCALLTYPE CEventSink::Release()
     if(lRef == 0)
         delete this;
 
-    return lRef;
+	return lRef;
 }
 
 HRESULT STDMETHODCALLTYPE CEventSink::QueryInterface(REFIID riid, void** ppv)

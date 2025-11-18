@@ -13,12 +13,10 @@ wxEND_EVENT_TABLE()
 CNextMCPUSegView::CNextMCPUSegView(wxWindow* parent, const int nID, const wxSize& sz, long lStyle)
 	: wxWindow(parent, nID, wxDefaultPosition, sz, lStyle)
 {
-
 }
 
 CNextMCPUSegView::~CNextMCPUSegView()
 {
-
 }
 
 void CNextMCPUSegView::OnErase(wxEraseEvent& event)
@@ -122,7 +120,7 @@ void CNextMCPUSegView::CreateSegmentArea(const wxRect& rc, int segCount)
 
 void CNextMCPUSegView::UpdateListener(wxCommandEvent& event)
 {
-	m_ulUsage = theSystem->CPU()->GetTotalUsage();
+	m_ulUsage = theSystem->CPU()->GetValue(CPU_TOTAL);
 
 	DlgSystemResource* pDlg = (DlgSystemResource *)this->GetParent();
 	pDlg->UpdateCPUUsage(m_ulUsage);

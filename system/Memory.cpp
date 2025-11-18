@@ -16,6 +16,11 @@ CMemory::~CMemory()
 	this->Disconnect(wxEVT_TIMER, wxTimerEventHandler(CMemory::OnTimer));
 }
 
+void CMemory::Free()
+{
+
+}
+
 void CMemory::Init()
 {
 	Update();

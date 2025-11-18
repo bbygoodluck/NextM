@@ -74,10 +74,10 @@ static int wxSUBDIR_END         = wxSUBDIR_START + 1000;
 constexpr int wxFAVIROTE_ID_START	= wxSHC_MENU + 5500;
 constexpr int wxFAVIROTE_ID_END     = wxFAVIROTE_ID_START + 499;
 
-constexpr double KILOBYTE = 1000.0f;
-constexpr double MEGABYTE = (1000.0f * 1000.0f);
-constexpr double GIGABYTE = (1000.0f * 1000.0f * 1000.0f);
-constexpr double TERABYTE = (1000.0f * 1000.0f * 1000.0f * 1000.0f);
+constexpr double KILOBYTE = 1024.0f;
+constexpr double MEGABYTE = (1024.0f * 1024.0f);
+constexpr double GIGABYTE = (1024.0f * 1024.0f * 1024.0f);
+constexpr double TERABYTE = (1024.0f * 1024.0f * 1024.0f * 1024.0f);
 
 const wxString TIME_FORMAT_DEFAULT = wxT("%04d-%02d-%02d %02d:%02d");
 const wxString SPACE_FORMAT_DEFAULT = wxT("%s / %s");

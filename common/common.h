@@ -19,16 +19,22 @@
 #include <wx/busyinfo.h>
 
 #ifdef __WXMSW__
+//	#define _WIN32_WINNT 0x0600
 	#define _WIN32_DCOM
+	#include <winsock2.h>
+	#include <windows.h>
 	#include <comdef.h>
 	#include <wbemidl.h>
 	#include <wx/msw/private.h>
-	#include <windows.h>
+	#include <WS2tcpip.h>
+	#include <iphlpapi.h>
 	#include <CommCtrl.h>
 	#include <imm.h>
 	#include <Dbt.h>
 	#include <shobjidl.h>
 	#include <shlobj.h>
+	#include <Pdh.h>
+	#include <PdhMsg.h>
 #endif
 //std header
 #include <memory>
@@ -37,6 +43,10 @@
 #include <fstream>
 #include <iterator>
 #include <list>
+
+
+//external (unordered_flat_map)
+#include "../external/include/robin_hood.h"
 
 //버전관리
 #include "Version.h"

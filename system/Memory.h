@@ -10,8 +10,9 @@ public:
 	~CMemory();
 
 public:
-	virtual void Init()   override;
-	virtual void Update() override;
+	void Init()   override;
+	void Update() override;
+	void Free()   override;
 
 	unsigned long GetTotalMemory() { return _ullTotalPhys; }
 	unsigned long GetAvaliableMemory() { return _ullAvailPhys; }

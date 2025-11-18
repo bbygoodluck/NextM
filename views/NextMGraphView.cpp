@@ -13,7 +13,7 @@ wxEND_EVENT_TABLE()
 CNextMGraphView::CNextMGraphView(wxWindow* parent, const int nID, const wxSize& sz, long lStyle)
 	: wxWindow(parent, nID, wxDefaultPosition, sz, lStyle)
 	, m_colBackPen(0, 0, 0)
-	, m_colBackBrush(225, 225, 225)
+	, m_colBackBrush(20, 20, 20)
 {
 	this->SetBackgroundStyle(wxBG_STYLE_ERASE);
 
@@ -92,6 +92,7 @@ void CNextMGraphView::Render(wxDC* pDC)
 	DrawGraph(pDC);
 
 	wxString strCoreIndexUsage{wxString::Format(wxT("#%02d - %u%"), m_coreIndex + 1, m_coreUsage)};
+	pDC->SetTextForeground(wxColour(255, 128, 192));
 	pDC->DrawText(strCoreIndexUsage, m_viewRect.GetRight(), m_viewRect.GetBottom());
 }
 
@@ -221,8 +222,10 @@ void CNextMGraphView::UpdateListener(wxCommandEvent& event)
 	if (m_viewGraphRect.GetWidth() == 0)
 		return;
 
+	wxString strCore = wxString::Format(CPU_CORE, m_coreIndex);
+
 	int xPos = m_viewGraphRect.GetLeft();
-	m_coreUsage = theSystem->CPU()->GetCPUCoreUsage(m_coreIndex);
+	m_coreUsage = theSystem->CPU()->GetValue(strCore);
 
 	bool bLineDraw = false;
 	if(m_coreUsage >= 75)

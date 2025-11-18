@@ -299,12 +299,12 @@ void CNextMMenuEvent::OnToolbarEvent(wxCommandEvent& event)
 		return;
 
 	// Disk Usage or Resource Usage
-	if( (nMenuID == TOOLBAR_ID_RESOURCE_USAGE) ||
-		(nMenuID == TOOLBAR_ID_DISK_USAGE) )
-	{
-//		m_pMenuOperation->ExecuteMenuAnother(nMenuID);
-		return;
-	}
+//	if( (nMenuID == TOOLBAR_ID_RESOURCE_USAGE) ||
+//		(nMenuID == TOOLBAR_ID_DISK_USAGE) )
+//	{
+////		m_pMenuOperation->ExecuteMenuAnother(nMenuID);
+//		return;
+//	}
 
 	std::unordered_map<int, wxString>::const_iterator fIter = m_mapToolBarMenu.find(nMenuID);
 	if(fIter == m_mapToolBarMenu.end())

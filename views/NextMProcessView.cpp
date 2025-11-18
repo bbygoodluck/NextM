@@ -5,146 +5,10 @@
 #define CONTEXT_MENU_KILL_PROCESS        PROCESSVIEW_CONTEXT_MENU_START
 #define CONTEXT_MENU_VIEW_PROCESS_DETAIL PROCESSVIEW_CONTEXT_MENU_START + 1
 
-#ifdef __WXMSW__
-#include "../system/msw/EventSink.h"
-void WMIWorker(CNextMProcessView* frame, std::atomic<bool>& keepRunning)
-{
-	HRESULT hr;
-
-    // Initialize COM for this thread
-    hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-    if (FAILED(hr))
-    {
-        wxTheApp->CallAfter([frame]() {
-            wxMessageBox(wxT("CoInitializeEx failed for WMI thread"), PROGRAM_FULL_NAME, wxOK | wxICON_ERROR, frame);
-        });
-        return;
-    }
-
-    // Set general COM security
-//    hr = CoInitializeSecurity(
-//        NULL,
-//        -1, // COM negotiates service
-//        NULL, // Authentication services
-//        NULL,
-//        RPC_C_AUTHN_LEVEL_DEFAULT, // default authentication
-//        RPC_C_IMP_LEVEL_IMPERSONATE, // default Impersonation
-//        NULL,
-//        EOAC_NONE,
-//        NULL
-//    );
-//
-//    if (FAILED(hr))
-//    {
-//        wxTheApp->CallAfter([frame]() {
-//            wxMessageBox("CoInitializeSecurity failed", "Error", wxOK | wxICON_ERROR);
-//        });
-//        CoUninitialize();
-//        return;
-//    }
-
-    IWbemLocator* pLoc = NULL;
-    hr = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, IID_IWbemLocator, (LPVOID*)&pLoc);
-    if (FAILED(hr) || !pLoc)
-    {
-        wxTheApp->CallAfter([frame]() { wxMessageBox(wxT("Failed to create IWbemLocator"), PROGRAM_FULL_NAME, wxOK | wxICON_ERROR, frame); });
-
-        CoUninitialize();
-        return;
-    }
-
-    IWbemServices* pSvc = NULL;
-    // Connect to the root\cimv2 namespace with current user.
-    hr = pLoc->ConnectServer(
-        _bstr_t(L"ROOT\\CIMV2"),
-        NULL,
-        NULL,
-        0,
-        0,//NULL,
-        0,
-        0,
-        &pSvc
-    );
-
-    if (FAILED(hr) || !pSvc)
-    {
-        wxTheApp->CallAfter([frame]() {
-					wxMessageBox(wxT("Could not connect to WMI namespace ROOT\\CIMV2.\nTry running as administrator."),
-								PROGRAM_FULL_NAME + " - WMI Connect Failed",
-								wxOK | wxICON_ERROR,
-								frame);
-		});
-        pLoc->Release();
-        CoUninitialize();
-        return;
-    }
-
-    // Set security levels on the proxy
-    hr = CoSetProxyBlanket(
-        pSvc, // the proxy to set
-        RPC_C_AUTHN_WINNT,
-        RPC_C_AUTHZ_NONE,
-        NULL,
-        RPC_C_AUTHN_LEVEL_CALL,
-        RPC_C_IMP_LEVEL_IMPERSONATE,
-        NULL,
-        EOAC_NONE
-    );
-    if (FAILED(hr))
-    {
-        wxTheApp->CallAfter([frame]() { wxMessageBox(wxT("CoSetProxyBlanket failed"), PROGRAM_FULL_NAME, wxOK | wxICON_ERROR, frame); });
-        pSvc->Release();
-        pLoc->Release();
-        CoUninitialize();
-        return;
-    }
-
-    CEventSink* sink = new CEventSink((wxWindow *)frame);
-	sink->AddRef();
-
-    // Query for process creation
-    BSTR wql = SysAllocString(L"WQL");
-    BSTR creationQuery = SysAllocString(L"SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process'");
-    hr = pSvc->ExecNotificationQueryAsync(
-        wql, //bstr_t("WQL"),
-        creationQuery,
-        WBEM_FLAG_SEND_STATUS,
-        NULL,
-        sink);
-
-    SysFreeString(creationQuery);
-
-    // Query for process deletion
-    BSTR deletionQuery = SysAllocString(L"SELECT * FROM __InstanceDeletionEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process'");
-    hr = pSvc->ExecNotificationQueryAsync(
-        wql,//bstr_t("WQL"),
-        deletionQuery,
-        WBEM_FLAG_SEND_STATUS,
-        NULL,
-        sink);
-
-    SysFreeString(deletionQuery);
-    SysFreeString(wql);
-
-    // Keep thread alive until stop requested
-    while (keepRunning.load())
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    }
-
-    // Cancel async queries by calling CancelAsyncCall
-    pSvc->CancelAsyncCall(sink);
-
-    // Cleanup
-    sink->Release();
-    pSvc->Release();
-    pLoc->Release();
-    CoUninitialize();
-}
-#endif // __WXMSW__
-
 wxBEGIN_EVENT_TABLE(CNextMProcessView, wxListCtrl)
 	EVT_MENU_RANGE(PROCESSVIEW_CONTEXT_MENU_START, PROCESSVIEW_CONTEXT_MENU_END, CNextMProcessView::OnListContextMenu)
+	EVT_SET_FOCUS(CNextMProcessView::OnSetFocus)
+	EVT_KILL_FOCUS(CNextMProcessView::OnKillFocus)
 wxEND_EVENT_TABLE()
 
 CNextMProcessView::CNextMProcessView(wxWindow* _parent, long style)
@@ -178,18 +42,12 @@ CNextMProcessView::CNextMProcessView(wxWindow* _parent, long style)
 	InitColumn();
 	InitList();
 
-	m_timer.Start(1200);
-
-	m_keepRunning.store(true);
-#ifdef __WXMSW__
-	m_thread = std::thread(WMIWorker, this, std::ref(m_keepRunning));
-#else
-
-#endif
+	m_timer.Start(1500);
 }
 
 CNextMProcessView::~CNextMProcessView()
 {
+	m_bEnded = true;
 	m_timer.Stop();
 
 	if(m_pContextMenu)
@@ -197,9 +55,6 @@ CNextMProcessView::~CNextMProcessView()
 		delete m_pContextMenu;
 		m_pContextMenu = nullptr;
 	}
-
-	m_keepRunning.store(false);
-	if (m_thread.joinable()) m_thread.join();
 
 	this->Disconnect( wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, wxListEventHandler( CNextMProcessView::OnListItemRightClick ), NULL, this );
 	this->Disconnect(wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler(CNextMProcessView::OnItemSelected), NULL, this);
@@ -232,15 +87,18 @@ void CNextMProcessView::CreateContextMenu()
 void CNextMProcessView::InitColumn()
 {
 	sListColumnItem lstColumn[] = {
-		{wxT("ProcessName")     , 250, wxLIST_FORMAT_LEFT},
-		{wxT("PID")             , 70 , wxLIST_FORMAT_RIGHT},
-		{wxT("UserName")        , 230, wxLIST_FORMAT_RIGHT},
-		{wxT("CPU")             , 70 , wxLIST_FORMAT_RIGHT},
-		{wxT("Private KBytes")  , 140, wxLIST_FORMAT_RIGHT},
-		{wxT("WorkingSet")      , 140, wxLIST_FORMAT_RIGHT},
+		{wxT("Name")            , 250, wxLIST_FORMAT_LEFT},
+		{wxT("PID")             , 70,  wxLIST_FORMAT_RIGHT},
+		{wxT("User")            , 150, wxLIST_FORMAT_RIGHT},
+		{wxT("MemB")            , 70, wxLIST_FORMAT_RIGHT},
+		{wxT("Cpu%")            , 70 , wxLIST_FORMAT_RIGHT},
+		{wxT("Path")            , 600, wxLIST_FORMAT_LEFT},
 		{wxT("File Description"), 270, wxLIST_FORMAT_LEFT},
-		{wxT("Company Name")    , 180, wxLIST_FORMAT_LEFT},
-		{wxT("FullPath")        , 540, wxLIST_FORMAT_LEFT},
+		{wxT("Company Name")    , 200, wxLIST_FORMAT_LEFT},
+		{wxT("Threads")         , 70 , wxLIST_FORMAT_RIGHT},
+		{wxT("Command")         , 640, wxLIST_FORMAT_LEFT},
+//		{wxT("WorkingSet")      , 140, wxLIST_FORMAT_RIGHT},
+//		{wxT("FullPath")        , 540, wxLIST_FORMAT_LEFT},
 	};
 
 	for (unsigned int i = 0; i < WXSIZEOF(lstColumn); i++)
@@ -256,28 +114,31 @@ void CNextMProcessView::InitColumn()
 
 void CNextMProcessView::InitList()
 {
-	std::unordered_map<unsigned long, PROCESS_INFO *>::const_iterator iter    = theSystem->PROCESS()->Begin();
-	std::unordered_map<unsigned long, PROCESS_INFO *>::const_iterator iterEnd = theSystem->PROCESS()->End();
+	std::unordered_map<unsigned long, Proc::PROCESS_INFO *>::const_iterator iter    = theSystem->PROCESS()->Begin();
+	std::unordered_map<unsigned long, Proc::PROCESS_INFO *>::const_iterator iterEnd = theSystem->PROCESS()->End();
 
-	wxString strSize(wxT(""));
+	wxString strPrivateSize(wxT(""));
 	int iIndex = 0;
+
 	while(iter != iterEnd)
 	{
-		/*std::pair<unsigned long, PROCESS_INFO *> item = *vecIterS;*/
-		PROCESS_INFO* pProcessInfo = iter->second;
+		Proc::PROCESS_INFO* pProcessInfo = iter->second;
+		strPrivateSize = theUtility->floating_humanizer(pProcessInfo->_PrivateSize, true, true);
 
 		InsertItem(iIndex, pProcessInfo->_strProcessName);
 		SetItem(iIndex, 1, wxString::Format(wxT("%u"), pProcessInfo->_ulProcessID));
-		SetItem(iIndex, 2, pProcessInfo->_strDomainAndUser);
-		SetItem(iIndex, 3, wxT("0.00%"));
-		SetItem(iIndex, 4, wxT("0 KB"));
-		SetItem(iIndex, 5, wxT("0 KB"));
+		SetItem(iIndex, 2, pProcessInfo->_strUserName);
+		SetItem(iIndex, 3, strPrivateSize);
+		SetItem(iIndex, 4, wxString::Format(wxT("%.2f"), pProcessInfo->fCPUUsage));
+		SetItem(iIndex, 5, pProcessInfo->_strProcessFullPath);
 		SetItem(iIndex, 6, pProcessInfo->_strFileDescription);
 		SetItem(iIndex, 7, pProcessInfo->_strCompanyName);
-		SetItem(iIndex, 8, pProcessInfo->_strProcessFullPath);
+		SetItem(iIndex, 8, wxString::Format(wxT("%d"), pProcessInfo->_threadsCount));
+		SetItem(iIndex, 9, pProcessInfo->_strCommandLine);
 
 		this->SetItemIcon(iIndex, pProcessInfo->iIconIndex);
 		this->SetItemData(iIndex, iIndex);
+
 		iIndex++;
 		++iter;
 	}
@@ -354,6 +215,8 @@ void CNextMProcessView::OnTimer(wxTimerEvent& event)
 	int iSelectedItemIndex = -1;
 	int iSystemIdleIndex = -1;
 
+//	theSystem->PROCESS()->InitKernalTime();
+
 	for(int index = 0; index < _processListCount; index++)
 	{
 		this->SetItemBackgroundColour(index, m_colBack);
@@ -370,10 +233,7 @@ void CNextMProcessView::OnTimer(wxTimerEvent& event)
 		strProcessID.ToCULong(&ulProcessID);
 
 		if(_ulForegroundProcessID == ulProcessID)
-		{
-			SetItemFocus(index);
 			this->SetItemBackgroundColour(index, wxColour(255, 255, 0));
-		}
 
 		strCPUUsage = wxT("0.00");
 		strPrivateSize = wxT("0 KB");
@@ -381,19 +241,16 @@ void CNextMProcessView::OnTimer(wxTimerEvent& event)
 
 		float fCPUUsage = 0.0f;
 
-		PROCESS_INFO* pProcessInfo = theSystem->PROCESS()->UpdateProcessInfo(ulProcessID);
+		Proc::PROCESS_INFO* pProcessInfo = theSystem->PROCESS()->UpdateProcessInfo(ulProcessID);
 		if(pProcessInfo)
 		{
 			fCPUUsage = pProcessInfo->fCPUUsage;
 			strCPUUsage = wxString::Format(wxT("%.2f"), fCPUUsage);
 
-			strPrivateSize = theUtility->SetComma(wxString::Format(wxT("%.0f"), (float)pProcessInfo->_PrivateSize / (1024.0f)));
+			strPrivateSize = theUtility->floating_humanizer(pProcessInfo->_PrivateSize, true, true);
 
-			strWorkingSet = theUtility->SetComma(wxString::Format(wxT("%.0f"), (float)pProcessInfo->_WorkingSetSize / (1024.0f)));
-
-			this->SetItem(index, 3, strCPUUsage    + wxT("%"));
-			this->SetItem(index, 4, strPrivateSize + wxT(" KB"));
-			this->SetItem(index, 5, strWorkingSet  + wxT(" KB"));
+			this->SetItem(index, 3, strPrivateSize);
+			this->SetItem(index, 4, strCPUUsage);
 
 			if(fCPUUsage >= 30.0f)
 			{
@@ -409,64 +266,72 @@ void CNextMProcessView::OnTimer(wxTimerEvent& event)
 
 void CNextMProcessView::AddAndDelProcessEvent(const wxString& type, const wxString& name, long pid, const wxString& cmdline)
 {
-	wxCriticalSectionLocker lock(m_critSection);
-	m_bNewOrDelProcess = true;
+	if(m_bEnded)
+		return;
 
-	this->m_bAscending = true;
-	this->m_iSortingColumn = 0;
-
-	if(type.CmpNoCase("Created") == 0)
+	if(m_critSection.TryEnter())
 	{
-		theSystem->PROCESS()->AddProcessInfo(pid, name);
-		PROCESS_INFO* pProcessInfo = theSystem->PROCESS()->GetInfo(pid);
+		wxCriticalSectionLocker lock(m_critSection);
+		m_bNewOrDelProcess = true;
 
-		if(pProcessInfo)
+		this->m_bAscending = true;
+		this->m_iSortingColumn = 0;
+
+		if(type.CmpNoCase("Created") == 0)
 		{
-			pProcessInfo->_strCommandLine = cmdline;
-			int iLstCnt = this->GetItemCount();
+			Proc::PROCESS_INFO* pProcessInfo = theSystem->PROCESS()->AddProcess(pid)->GetInfo(pid);
 
-			this->InsertItem(iLstCnt, pProcessInfo->_strProcessName);
-			this->SetItem(iLstCnt, 1, wxString::Format(wxT("%u"), pProcessInfo->_ulProcessID));
-			this->SetItem(iLstCnt, 2, pProcessInfo->_strDomainAndUser);
-			this->SetItem(iLstCnt, 3, wxT("0.0%"));
-			this->SetItem(iLstCnt, 4, wxT("0 KB"));
-			this->SetItem(iLstCnt, 5, wxT("0 KB"));
-			this->SetItem(iLstCnt, 6, pProcessInfo->_strFileDescription);
-			this->SetItem(iLstCnt, 7, pProcessInfo->_strCompanyName);
-			this->SetItem(iLstCnt, 8, pProcessInfo->_strProcessFullPath);
-
-			SetItemIcon(iLstCnt, pProcessInfo->iIconIndex);
-
-			iLstCnt = this->GetItemCount();
-			for(int index = 0 ; index < iLstCnt; index++)
-				this->SetItemData(index, index);
-
-			this->SortItems(CNextMProcessView::ListCompareFunction, (LPARAM)this);
-		}
-	}
-	else if(type.CmpNoCase("Deleted") == 0)
-	{
-		int iLstCnt = this->GetItemCount();
-
-		wxString strProcessID(wxT(""));
-		int iDelItem = -1;
-		for (int i = 0; i < iLstCnt; i++)
-		{
-			strProcessID = this->GetItemText(i, 1);
-			unsigned long _ulProcessID = 0;
-
-			strProcessID.ToCULong(&_ulProcessID);
-			if((unsigned long)pid == _ulProcessID)
+			if(pProcessInfo)
 			{
-				iDelItem = i;
-				break;
+				pProcessInfo->_strCommandLine = cmdline;
+				int iLstCnt = this->GetItemCount();
+
+				wxString strPrivateSize = theUtility->floating_humanizer(pProcessInfo->_PrivateSize, true, true);
+
+				InsertItem(iLstCnt, pProcessInfo->_strProcessName);
+				SetItem(iLstCnt, 1, wxString::Format(wxT("%u"), pProcessInfo->_ulProcessID));
+				SetItem(iLstCnt, 2, pProcessInfo->_strDomainAndUser);
+				SetItem(iLstCnt, 3, strPrivateSize);
+				SetItem(iLstCnt, 4, wxString::Format(wxT("%.2f"), pProcessInfo->fCPUUsage));
+				SetItem(iLstCnt, 5, pProcessInfo->_strProcessFullPath);
+				SetItem(iLstCnt, 6, pProcessInfo->_strFileDescription);
+				SetItem(iLstCnt, 7, pProcessInfo->_strCompanyName);
+				SetItem(iLstCnt, 8, wxString::Format(wxT("%d"), pProcessInfo->_threadsCount));
+				SetItem(iLstCnt, 9, pProcessInfo->_strCommandLine);
+
+				SetItemIcon(iLstCnt, pProcessInfo->iIconIndex);
+
+				iLstCnt = this->GetItemCount();
+				for(int index = 0 ; index < iLstCnt; index++)
+					this->SetItemData(index, index);
+
+				this->SortItems(CNextMProcessView::ListCompareFunction, (LPARAM)this);
 			}
 		}
-
-		if(iDelItem != -1)
+		else if(type.CmpNoCase("Deleted") == 0)
 		{
-			theSystem->PROCESS()->DeleteProcess((unsigned long)pid);
-			this->DeleteItem(iDelItem);
+			int iLstCnt = this->GetItemCount();
+
+			wxString strProcessID(wxT(""));
+			int iDelItem = -1;
+			for (int i = 0; i < iLstCnt; i++)
+			{
+				strProcessID = this->GetItemText(i, 1);
+				unsigned long _ulProcessID = 0;
+
+				strProcessID.ToCULong(&_ulProcessID);
+				if((unsigned long)pid == _ulProcessID)
+				{
+					iDelItem = i;
+					break;
+				}
+			}
+
+			if(iDelItem != -1)
+			{
+				theSystem->PROCESS()->DeleteProcess((unsigned long)pid);
+				this->DeleteItem(iDelItem);
+			}
 		}
 	}
 }
@@ -552,16 +417,16 @@ void CNextMProcessView::OnListContextMenu(wxCommandEvent& event)
 
 void CNextMProcessView::OnItemSelected(wxListEvent& event)
 {
-	int iSel = event.GetIndex();
-	SetItemFocus(iSel);
+	m_iSelIndex = event.GetIndex();
+	SetItemFocus(m_iSelIndex);
 }
 
 void CNextMProcessView::SetItemFocus(int _itemIndex)
 {
-	if(m_iSelIndex == _itemIndex)
+	if(_itemIndex < 0)
 		return;
 
-	m_iSelIndex = _itemIndex;
+	m_bSelected = true;
 	wxString strProcessID = GetItemText(_itemIndex, 1);
 
 	strProcessID.ToCULong(&m_ulSelProcessID);
@@ -572,3 +437,16 @@ void CNextMProcessView::SetItemFocus(int _itemIndex)
 //	SetItemState(iSel, 0, wxLIST_STATE_SELECTED);
 }
 
+void CNextMProcessView::OnSetFocus(wxFocusEvent& event)
+{
+	if(!m_bFocus)
+	{
+		SetItemFocus(m_iSelIndex);
+		m_bFocus = true;
+	}
+}
+
+void CNextMProcessView::OnKillFocus(wxFocusEvent& event)
+{
+	m_bFocus = false;
+}

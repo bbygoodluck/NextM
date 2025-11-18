@@ -10,8 +10,9 @@ public:
 	~CNetwork();
 
 public:
-	virtual void Init() override;
-	virtual void Update() override;
+	void Init()   override;
+	void Update() override;
+	void Free()   override;
 
 	unsigned long GetInBytes() { return dwcurrent_recv_; }
 	unsigned long GetOutBytes() { return dwcurrent_sent_; }
@@ -24,16 +25,40 @@ public:
 	wxString GetIP() const { return strNetIP_; }
 
 	wxString GetBandWidth(unsigned long _ulbps, bool _bMaxDisp);
+
+	auto GetNetworkInfo() -> Net::net_info;
+	wxString GetInterfaceInfo(const int index);
+
+	std::vector<wxString>& GetInterfaces() {
+		return interfaces;
+	}
+	void SetSelectAdapter(const unsigned int indx) {
+		select_index = indx;
+	}
+
 private:
+	void InitNetworkInfo();
 
 
 private:
+	robin_hood::unordered_flat_map<wxString, Net::net_info> current_net;
+	Net::net_info empty_net = {};
+
+	std::vector<wxString> interfaces;
+	std::vector<wxString> failed;
+
+	wxString selected_iface{wxT("")};
+
+	uint64_t timestamp = 0;
+
 	wxString strNetAdapterName_ = wxT("");
 	wxString strNetDescription_ = wxT("");
 	wxString strNetIP_          = wxT("");
 	bool bSetNetInfo_           = false;
 
+	unsigned int select_index = 0;
 #ifdef __WXMSW__
+	IP_ADAPTER_ADDRESSES* m_pAdapters = nullptr;
 	DWORD dwcurrent_sent_ = 0;
 	DWORD dwcurrent_recv_ = 0;
 	DWORD dwlast_sent_ = 0;

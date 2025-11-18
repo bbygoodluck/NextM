@@ -1,12 +1,6 @@
 #ifndef SYSTEMCOMMON_H_INCLUDED
 #define SYSTEMCOMMON_H_INCLUDED
 
-#ifdef __WXMSW__
-	#include <Pdh.h>
-	#include <PdhMsg.h>
-	#include <Iphlpapi.h>
-#endif
-
 class CSystemInterface : public wxEvtHandler
 {
 public:
@@ -16,6 +10,7 @@ public:
 public:
 	virtual void Init()   = 0;
 	virtual void Update() = 0;
+	virtual void Free()   = 0;
 
 	void Start(int milliseconds) {
 		m_bStarted = true;

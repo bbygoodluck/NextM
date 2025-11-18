@@ -1,4 +1,5 @@
 #include "../ginc.h"
+#include "Sysdef.h"
 #include "CPU.h"
 
 #include <intrin.h>
@@ -16,20 +17,11 @@ CCPU::~CCPU()
 {
 	this->Disconnect(wxEVT_TIMER, wxTimerEventHandler(CCPU::OnTimer));
 
-#ifdef __WXMSW__
-	PdhCloseQuery(m_hCpuQuery);
-	PdhRemoveCounter(m_hCounterCPUTotal);
-
-	for (size_t cnt = 0; cnt < m_CPUCoreCount; cnt++)
-		PdhRemoveCounter(m_phCounterCPUCore[cnt]);
-
-	wxDELETE(m_phCounterCPUCore);
-	delete[] m_pArrayCore;
-#endif // __WXMSW__
 }
 
 void CCPU::Init()
 {
+	Free();
 	GetSystemTimes(&idlePrev, &kernelPrev, &userPrev);
 
 	// Reference StackOverflow
@@ -68,41 +60,107 @@ void CCPU::Init()
 	}
 
 #ifdef __WXMSW__
+	InitializePDH();
+#endif // __WXMSW__
+}
+
+#ifdef __WXMSW__
+bool CCPU::InitializePDH()
+{
+	if(m_bPhdOK)
+		return m_bPhdOK;
+
 	PDH_STATUS status = PdhOpenQuery(NULL, 0, &m_hCpuQuery);
 	if(status != ERROR_SUCCESS)
-		return;
-
-	if( PdhAddEnglishCounter(m_hCpuQuery, TEXT("\\Processor(_Total)\\% Processor Time"), 0, &m_hCounterCPUTotal) != ERROR_SUCCESS ||
-		PdhCollectQueryData(m_hCpuQuery) != ERROR_SUCCESS)
-	{
-		PdhCloseQuery(m_hCpuQuery);
-		return;
-	}
+		return false;
 
 	// CPU core 정보
 	SYSTEM_INFO SystemInfo = { 0 };
 	GetSystemInfo(&SystemInfo);
 
 	if (SystemInfo.dwNumberOfProcessors > 0)
-	{
 		m_CPUCoreCount = SystemInfo.dwNumberOfProcessors;
 
-		m_phCounterCPUCore = new HCOUNTER[m_CPUCoreCount];
-		//CPU코어 수만큼 생성하고 0으로 초기화
-		m_pArrayCore = new unsigned long[m_CPUCoreCount]();
+	//CPU전체 사용량
+	AddCounter(CPU_TOTAL);
 
-		for (size_t cnt = 0; cnt < m_CPUCoreCount; cnt++)
-		{
-			TCHAR szFullCounterPath[1024] = { 0x00, };
-			wsprintf(szFullCounterPath, TEXT("\\Processor(%d)\\%% Processor Time"), cnt);
-			PDH_STATUS status = PdhAddEnglishCounter(m_hCpuQuery, szFullCounterPath, 1, &m_phCounterCPUCore[cnt]);
-			assert(status == ERROR_SUCCESS);
-		}
+	wxString strCore{wxT("")};
+	for (size_t cnt = 0; cnt < m_CPUCoreCount; cnt++)
+	{
+		strCore = wxString::Format(CPU_CORE, (int)cnt);
+		AddCounter(strCore);
 	}
 
 	m_bPhdOK = true;
 
+	return true;
+}
+#endif
+
+void CCPU::Free()
+{
+#ifdef __WXMSW__
+	robin_hood::unordered_flat_map<wxString, Cpu::PPDHCOUNTERSTRUCT>::iterator iter = m_Counters.begin();
+	for (iter; iter != m_Counters.end(); ++iter)
+	{
+		Cpu::PPDHCOUNTERSTRUCT pdhCounter = iter->second;
+		PdhRemoveCounter(pdhCounter->hCounter);
+
+		delete pdhCounter;
+	}
+
+	m_Counters.clear();
+	if(m_hCpuQuery)
+		PdhCloseQuery(m_hCpuQuery);
+
+	m_bPhdOK = false;
+#else
+
+#endif
+}
+
+#ifdef __WXMSW__
+bool CCPU::CollectQueryData()
+{
+	if (PdhCollectQueryData(m_hCpuQuery) != ERROR_SUCCESS)
+		return false;
+
+	return true;
+}
+
+bool CCPU::AddCounter(const wxString& counterName)
+{
+	Cpu::PPDHCOUNTERSTRUCT pdhCounter = new Cpu::PDHCOUNTERSTRUCT;
+	if (PdhAddCounter(m_hCpuQuery, counterName.wc_str(), (DWORD_PTR)pdhCounter, &(pdhCounter->hCounter)) != ERROR_SUCCESS)
+		return false;
+
+	m_vecCounters.emplace_back(counterName);
+
+	robin_hood::unordered_flat_map<wxString, Cpu::PPDHCOUNTERSTRUCT>::value_type val(counterName, pdhCounter);
+	m_Counters.insert(val);
+
+	return true;
+}
 #endif // __WXMSW__
+
+auto CCPU::GetValue(const wxString& strKey) -> unsigned long
+{
+#ifdef __WXMSW__
+	robin_hood::unordered_flat_map<wxString, Cpu::PPDHCOUNTERSTRUCT>::const_iterator iter = m_Counters.find(strKey);
+	if(iter == m_Counters.end() )
+		return 0;
+
+	Cpu::PPDHCOUNTERSTRUCT pdhCounter = iter->second;
+	return pdhCounter->ulValue;
+#else
+	return 0;
+#endif
+}
+
+void CCPU::OnTimer(wxTimerEvent& event)
+{
+	Update();
+	SendEvent();
 }
 
 void CCPU::Update()
@@ -111,29 +169,30 @@ void CCPU::Update()
 	if(!m_bPhdOK)
 		return;
 
-	PDH_STATUS status = PdhCollectQueryData(m_hCpuQuery);
+	PDH_STATUS status = ERROR_SUCCESS;
+	if(!CollectQueryData())
+		return;
 
-	if (status == ERROR_SUCCESS)
+	int count = (int)m_vecCounters.size();
+	for(int i = 0 ; i < count ; i++)
 	{
-		// 전체 CPU 사용량
-		PDH_FMT_COUNTERVALUE PFC_Total = { 0 };
-		status = PdhGetFormattedCounterValue(m_hCounterCPUTotal, PDH_FMT_LONG, NULL, &PFC_Total);
-		if (status == ERROR_SUCCESS)
-			m_ulCPUTotalUage = PFC_Total.longValue;
-	}
+		wxString strKey = m_vecCounters.at(i);
 
-	// 개별 코어 사용량
-	for (size_t c1 = 0; c1 < m_CPUCoreCount; c1++)
-	{
-		PDH_FMT_COUNTERVALUE PFC_Value = { 0 };
-		status = PdhGetFormattedCounterValue(m_phCounterCPUCore[c1], PDH_FMT_LONG, NULL, &PFC_Value);
-		if (status != ERROR_SUCCESS)
+		robin_hood::unordered_flat_map<wxString, Cpu::PPDHCOUNTERSTRUCT>::const_iterator iter = m_Counters.find(strKey);
+		if(iter != m_Counters.end() )
 		{
-			m_pArrayCore[c1] = 0;
-			continue;
-		}
+			Cpu::PPDHCOUNTERSTRUCT pdhCounter = iter->second;
 
-		m_pArrayCore[c1] = PFC_Value.longValue;
+			PDH_FMT_COUNTERVALUE pdhFormattedValue = {0};
+			status = PdhGetFormattedCounterValue(pdhCounter->hCounter, PDH_FMT_LONG, NULL, &pdhFormattedValue);
+			if (status != ERROR_SUCCESS)
+			{
+				pdhCounter->ulValue = 0;
+				continue;
+			}
+
+			pdhCounter->ulValue = pdhFormattedValue.longValue;
+		}
 	}
 #else
 	FILETIME sysIdle, sysKernel, sysUser;
@@ -174,18 +233,6 @@ void CCPU::Update()
 #endif
 }
 
-unsigned long CCPU::GetCPUCoreUsage(unsigned int index)
-{
-	if(!m_bPhdOK)
-		return 0;
-
-	if(index > m_CPUCoreCount)
-		return 0;
-
-	return m_pArrayCore[index];
-}
-
-
 double CCPU::GetUsage()
 {
 	FILETIME idleNow, kernelNow, userNow;
@@ -205,10 +252,4 @@ double CCPU::GetUsage()
 		return 0.0;
 
 	return (1.0 - (idle * 1.0 / total)) * 100.0;
-}
-
-void CCPU::OnTimer(wxTimerEvent& event)
-{
-	Update();
-	SendEvent();
 }

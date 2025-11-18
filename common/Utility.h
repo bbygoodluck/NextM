@@ -1,6 +1,7 @@
 #ifndef UTILITY_H_INCLUDED
 #define UTILITY_H_INCLUDED
 
+#include <chrono>
 class CUtility final
 {
 private:
@@ -98,6 +99,24 @@ public:
 
 	void SetTopWindow(HWND hWndInsertAfter);
 
+	//! Much of the following code is based on the implementation used in btop4win
+	//! See: https://github.com/aristocratos/btop4win
+	//* Return current time since epoch in seconds
+	inline uint64_t time_s() {
+		return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	}
+
+	//* Return current time since epoch in milliseconds
+	inline uint64_t time_ms() {
+		return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	}
+
+	//* Return current time since epoch in microseconds
+	inline uint64_t time_micros() {
+		return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	}
+
+	wxString floating_humanizer(uint64_t value, const bool is_mega = false, const bool shorten = false, size_t start = 0, const bool bit = false, const bool per_second = false);
 private:
 	void SetWorkingDirectory();
 	void Init();

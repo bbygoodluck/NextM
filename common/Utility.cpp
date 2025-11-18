@@ -566,6 +566,73 @@ void CUtility::SetTopWindow(HWND hWndInsertAfter)
 	::SetWindowPos(_gMainFrame->GetHWND(), hWndInsertAfter, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 }
 
+wxString CUtility::floating_humanizer(uint64_t value, const bool is_mega, const bool shorten, size_t start, const bool bit, const bool per_second)
+{
+	std::string out;
+	const size_t mult = (bit) ? 8 : 1;
+	const bool mega = is_mega;
+	static const std::array<std::string, 11> mebiUnits_bit  = {"bit", "Kib", "Mib", "Gib", "Tib", "Pib", "Eib", "Zib", "Yib", "Bib", "GEb"};
+	static const std::array<std::string, 11> mebiUnits_byte = {"Byte", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB", "BiB", "GEB"};
+	static const std::array<std::string, 11> megaUnits_bit  = {"bit", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb", "Bb", "Gb"};
+	static const std::array<std::string, 11> megaUnits_byte  = {"Byte", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", "BB", "GB"};
+
+	const auto& units = (bit) ? ( mega ? megaUnits_bit : mebiUnits_bit) : ( mega ? megaUnits_byte : mebiUnits_byte);
+
+	value *= 100 * mult;
+
+	if (mega)
+	{
+		while (value >= 100000)
+		{
+			value /= 1000;
+			if (value < 100)
+			{
+				out = std::to_string(value);
+				break;
+			}
+
+			start++;
+		}
+	}
+	else
+	{
+		while (value >= 102400)
+		{
+			value >>= 10;
+			if (value < 100)
+			{
+				out = std::to_string(value);
+				break;
+			}
+
+			start++;
+		}
+	}
+
+	if (out.empty())
+	{
+		out = std::to_string(value);
+		if (not mega and out.size() == 4 and start > 0) { out.pop_back(); out.insert(2, ".");}
+		else if (out.size() == 3 and start > 0) out.insert(1, ".");
+		else if (out.size() >= 2) out.resize(out.size() - 2);
+	}
+
+	if (shorten)
+	{
+		auto f_pos = out.find('.');
+		if (f_pos == 1 and out.size() > 3) out = std::to_string(std::round(std::stof(out) * 10) / 10).substr(0,3);
+		else if (f_pos != std::string::npos) out = std::to_string((int)std::round(std::stof(out)));
+		if (out.size() > 3) { out = std::to_string((int)(out[0] - '0') + 1); start++;}
+		out.push_back(units[start][0]);
+	}
+	else
+		out += " " + units[start];
+
+	if (per_second) out += (bit) ? "ps" : "/s";
+
+	return wxString(out);
+}
+
 #ifdef __WXMSW__
 void CUtility::SetImeModeToEnglish(wxWindow* pWindow)
 {

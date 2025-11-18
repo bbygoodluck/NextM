@@ -11,6 +11,8 @@ public:
 	explicit CNextMCPUSegView(wxWindow* parent, const int nID, const wxSize& sz, long lStyle = CHILD_WINDOW_STYLE);
 	~CNextMCPUSegView();
 
+//	void SetIndex(int index) { m_CPUIndex = index; }
+
 private:
 	void Render(wxDC* pDC);
 	void SeperateDigit(int val);
@@ -22,7 +24,6 @@ private:
 	wxRect m_viewRect = wxRect(0, 0, 0, 0);
 
 	// 세그먼트별 스페이스(Default)
-
     int m_hunders = 0;
     int m_tens    = 0;
     int m_ones    = 0;
@@ -37,7 +38,7 @@ private:
 	void OnErase(wxEraseEvent& event);
 	void OnSize(wxSizeEvent& event);
 
-	virtual void UpdateListener(wxCommandEvent& event) override;
+	void UpdateListener(wxCommandEvent& event) override;
 	wxDECLARE_EVENT_TABLE();
 };
 

@@ -33,7 +33,7 @@ public:
 public:
 	void UpdateMemory(unsigned long total, unsigned long used);
 	void UpdateCPUUsage(unsigned int usage);
-	void UpdateNETInfo();
+	void UpdateNETInfo(unsigned int index);
 
 private:
 	void GetColorForUsage(int* red, int* green, unsigned int value);
@@ -43,6 +43,7 @@ private:
 protected:
 	virtual void OnInitDialog( wxInitDialogEvent& event );
 	virtual void OnClickClose( wxCommandEvent& event );
+	virtual void OnComboSelected( wxCommandEvent& event );
 
 protected:
 	wxButton* m_btnClose;
@@ -57,6 +58,8 @@ protected:
 	CNextMMemView*    m_pMEMView       = nullptr;
 	CNextMNetView*    m_pNetView       = nullptr;
 	CNextMCPUSegView* m_pCPUSegView    = nullptr;
+
+	wxComboBox* m_cmbInterface;
 };
 
 

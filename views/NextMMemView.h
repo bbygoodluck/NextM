@@ -311,7 +311,7 @@ private:
 	void OnSize(wxSizeEvent& event);
 	void OnTimer(wxTimerEvent& event);
 
-	virtual void UpdateListener(wxCommandEvent& event) override;
+	void UpdateListener(wxCommandEvent& event) override;
 	wxDECLARE_EVENT_TABLE();
 };
 

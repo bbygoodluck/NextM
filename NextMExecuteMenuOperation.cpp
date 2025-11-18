@@ -641,8 +641,6 @@ void CNextMExecuteMenuOperation::CompressMenu_ExecuteCompress(int nId)
 
 void CNextMExecuteMenuOperation::CompressMenu_ExecuteCompress(int nId, const wxString& strCompressedFile)
 {
-    wxString strCompFile(strCompressedFile);
-
 	std::list<wxString> lstSrc;
 
 	CFileListView* pFileListView = GetFileListView();
@@ -663,7 +661,9 @@ void CNextMExecuteMenuOperation::CompressMenu_ExecuteCompress(int nId, const wxS
 	wxString strCompressedPath(wxT(""));
 	wxString strCompressedName(wxT(""));
 
-	if(strCompFile.CmpNoCase(wxT("")) == 0)
+	wxString strCompressedTarget(strCompressedFile);
+
+	if(strCompressedFile.CmpNoCase(wxT("")) == 0)
 	{
 		if(lstSrc.size() == 1)
 		{
@@ -675,11 +675,11 @@ void CNextMExecuteMenuOperation::CompressMenu_ExecuteCompress(int nId, const wxS
 			strCompressedName = strFullPath.Len() == 3 ? strFullPath.Left(1) : theUtility->GetPathName(strFullPath);
 
 		strCompressedPath = strFullPath.Len() == 3 ? strFullPath : strFullPath + SLASH;
-		strCompFile = strCompressedPath + strCompressedName + wxT(".") + strCompressedExt;
+		strCompressedTarget = strCompressedPath + strCompressedName + wxT(".") + strCompressedExt;
 	}
 
 	DlgCompress dlg(_gMainFrame);
-	dlg.SetCompressInfo(lstSrc, strCompFile, wxT(""), strCompressedExt);
+	dlg.SetCompressInfo(lstSrc, strCompressedTarget, wxT(""), strCompressedExt);
 	dlg.ShowModal();
 	dlg.Destroy();
 }

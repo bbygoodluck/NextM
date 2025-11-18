@@ -9,6 +9,10 @@
 #include "../views/NextMCPUSegView.h"
 #include "../views/NextMProcessView.h"
 
+#ifdef __WXMSW__
+#include "../system/msw/NextMWMI.h"
+#endif // __WXMSW__
+
 DlgSystemResource::DlgSystemResource( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
 {
 	SetIcon(wxIcon("wxwin"));
@@ -27,14 +31,14 @@ DlgSystemResource::DlgSystemResource( wxWindow* parent, wxWindowID id, const wxS
             .Transparency(5 * (wxALPHA_OPAQUE / 5))
     );
 
-	const int cpu_mem_height = 150;
+	const int cpu_mem_height = 180;
 	//시스템자원 초기화
 	InitializeResource();
 
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 	//윈도우 사이즈 변경
 	wxSize szMainFrame = _gMainFrame->GetSize();
-	wxSize szThisDlg(szMainFrame.GetX() - szMainFrame.GetWidth() / 5, szMainFrame.GetY() - szMainFrame.GetHeight() / 8);
+	wxSize szThisDlg(szMainFrame.GetX() - 50, szMainFrame.GetY() - 50);
 
 	this->SetSize(szThisDlg);
 
@@ -44,20 +48,22 @@ DlgSystemResource::DlgSystemResource( wxWindow* parent, wxWindowID id, const wxS
 	wxBoxSizer* bSizer_Resource;
 	bSizer_Resource = new wxBoxSizer( wxVERTICAL );
 
-	wxBoxSizer* bSizer_CPU_MEM;
-	bSizer_CPU_MEM = new wxBoxSizer( wxHORIZONTAL );
+	wxBoxSizer* bSizer_CPU;
+	bSizer_CPU = new wxBoxSizer( wxHORIZONTAL );
 
 //	wxStaticBoxSizer* sbSizer_CPU;
 	sbSizer_CPU = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("CPU - Total") ), wxHORIZONTAL );
 
 //	m_wndCPU = new wxPanel( sbSizer_CPU->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxSize( 300,200 ), wxTAB_TRAVERSAL );
-	m_pCPUSegView = new CNextMCPUSegView(this, wxID_ANY, wxSize( 250, cpu_mem_height ));
+	m_pCPUSegView = new CNextMCPUSegView(this, wxID_ANY, wxSize( 300, cpu_mem_height ));
+//	m_pCPUSegView->SetIndex(0);
+
 	theSystem->CPU()->AddEventListener((wxWindow *)m_pCPUSegView);
 
 	sbSizer_CPU->Add( m_pCPUSegView, 1, wxEXPAND | wxALL, 5 );
 
 
-	bSizer_CPU_MEM->Add( sbSizer_CPU, 0, wxALL|wxEXPAND, 5 );
+	bSizer_CPU->Add( sbSizer_CPU, 0, wxALL|wxEXPAND, 5 );
 
 	sbSizer_core = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("CPU - Core") ), wxVERTICAL );
 
@@ -68,24 +74,41 @@ DlgSystemResource::DlgSystemResource( wxWindow* parent, wxWindowID id, const wxS
 
 	sbSizer_core->Add( bSizerCore, 1, wxEXPAND, 5 );
 
-	bSizer_CPU_MEM->Add( sbSizer_core, 1, wxALL|wxEXPAND, 5 );
+	bSizer_CPU->Add( sbSizer_core, 1, wxALL|wxEXPAND, 5 );
+
+	bSizer_Resource->Add( bSizer_CPU, 0, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer_Mem_Net;
+	bSizer_Mem_Net = new wxBoxSizer( wxHORIZONTAL );
 
 	sbSizer_Mem = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Memory") ), wxHORIZONTAL );
-	m_pMEMView = new CNextMMemView( this, wxID_ANY, wxSize( 250, cpu_mem_height ));
+
+	m_pMEMView = new CNextMMemView( this, wxID_ANY, wxSize( 300, cpu_mem_height + 40 ));
 	sbSizer_Mem->Add( m_pMEMView, 1, wxEXPAND | wxALL, 5 );
 
-	theSystem->MEM()->AddEventListener((wxWindow *)m_pMEMView);
+//	theSystem->MEM()->AddEventListener((wxWindow *)m_pMEMView);
 
-	bSizer_CPU_MEM->Add( sbSizer_Mem, 0, wxALL|wxEXPAND, 5 );
+	bSizer_Mem_Net->Add( sbSizer_Mem, 0, wxALL|wxEXPAND, 5 );
 
-	bSizer_Resource->Add( bSizer_CPU_MEM, 0, wxEXPAND, 5 );
+//	bSizer_Resource->Add( bSizer_CPU_MEM, 0, wxEXPAND, 5 );
 
 	sbSizer_Net = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Network") ), wxVERTICAL );
-	m_pNetView = new CNextMNetView(this, wxID_ANY, wxSize( -1,100 ));
+
+	std::vector<wxString> intefaces = theSystem->NET()->GetInterfaces();
+
+	m_cmbInterface = new wxComboBox(this, wxID_ANY, wxT("Combo!"), wxDefaultPosition, wxSize(300, -1), intefaces, wxCB_DROPDOWN|wxCB_READONLY );
+	m_cmbInterface->SetSelection(0);
+
+	sbSizer_Net->Add( m_cmbInterface, 0, wxALL, 5 );
+
+	m_pNetView = new CNextMNetView(this, wxID_ANY, wxDefaultSize);
+	theSystem->NET()->AddEventListener((wxWindow *)m_pNetView);
 
 	sbSizer_Net->Add( m_pNetView, 1, wxEXPAND | wxALL, 5 );
 
-	bSizer_Resource->Add( sbSizer_Net, 1, wxALL|wxEXPAND, 5 );
+	bSizer_Mem_Net->Add( sbSizer_Net, 1, wxALL|wxEXPAND, 5 );
+
+	bSizer_Resource->Add( bSizer_Mem_Net, 1, wxEXPAND, 5 );
 
 	bSizer_Main->Add( bSizer_Resource, 0, wxEXPAND|wxLEFT|wxRIGHT, 5 );
 
@@ -101,19 +124,18 @@ DlgSystemResource::DlgSystemResource( wxWindow* parent, wxWindowID id, const wxS
 	sbSizer_Process->Add( m_lstCtrlProcess, 1, wxALL|wxEXPAND, 5 );
 
 	theSystem->PROCESS()->AddEventListener((wxWindow *)m_lstCtrlProcess);
+
 	bSizer_Main->Add( sbSizer_Process, 1, wxALL|wxEXPAND, 5 );
 
 	wxBoxSizer* bSizer_Button;
 	bSizer_Button = new wxBoxSizer( wxVERTICAL );
 
-	m_btnClose = new wxButton( this, wxID_ANY, wxT("닫기"), wxDefaultPosition, wxDefaultSize, 0 );
-
+	m_btnClose = new wxButton( this, wxID_ANY, wxT("닫기"), wxDefaultPosition, wxSize(-1, 30), 0 );
 	m_btnClose->SetBitmap( wxArtProvider::GetBitmap( wxASCII_STR(wxART_CLOSE), wxASCII_STR(wxART_BUTTON) ) );
+
 	bSizer_Button->Add( m_btnClose, 0, wxALL, 5 );
 
-
 	bSizer_Main->Add( bSizer_Button, 0, wxALIGN_RIGHT, 5 );
-
 
 	this->SetSizer( bSizer_Main );
 	this->Layout();
@@ -123,24 +145,33 @@ DlgSystemResource::DlgSystemResource( wxWindow* parent, wxWindowID id, const wxS
 	// Connect Events
 	this->Connect( wxEVT_INIT_DIALOG, wxInitDialogEventHandler( DlgSystemResource::OnInitDialog ) );
 	m_btnClose->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( DlgSystemResource::OnClickClose ), NULL, this );
+	m_cmbInterface->Connect( wxEVT_COMBOBOX, wxCommandEventHandler( DlgSystemResource::OnComboSelected ), NULL, this );
 
-	UpdateNETInfo();
-	theSystem->CPU()->Start(1000);
-//	theSystem->MEM()->Start();
+
+	UpdateNETInfo(0);
+#ifdef __WXMSW__
+	//프로세스 생성/삭제 이벤트 등록
+	CNextMWMI* pWMI = theSystem->PROCESS()->GetWMI();
+	pWMI->RegisterEventWindow((wxWindow *)m_lstCtrlProcess);
+#endif // __WXMSW__
+
+	theSystem->CPU()->Start(1200);
+	theSystem->NET()->Start(1100);
 }
 
 DlgSystemResource::~DlgSystemResource()
 {
+	//cpu info clear
 	theSystem->CPU()->Stop();
 	theSystem->CPU()->Clear();
 
-//	theSystem->MEM()->Stop();
-//	theSystem->MEM()->Clear();
-
-	theSystem->PROCESS()->Clear();
+	//Network Clear
+	theSystem->NET()->Stop();
+	theSystem->NET()->Clear();
 
 	this->Disconnect( wxEVT_INIT_DIALOG, wxInitDialogEventHandler( DlgSystemResource::OnInitDialog ) );
 	m_btnClose->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( DlgSystemResource::OnClickClose ), NULL, this );
+	m_cmbInterface->Disconnect( wxEVT_COMBOBOX, wxCommandEventHandler( DlgSystemResource::OnComboSelected ), NULL, this );
 }
 
 void DlgSystemResource::InitializeResource()
@@ -198,16 +229,12 @@ void DlgSystemResource::GetColorForUsage(int* red, int* green, unsigned int valu
 	*green = *red == 0 ? 255 : 255 - *red;
 }
 
-void DlgSystemResource::UpdateNETInfo()
+void DlgSystemResource::UpdateNETInfo(unsigned int index)
 {
 	wxStaticBox *netStaticBox = sbSizer_Net->GetStaticBox();
+	wxString strInterfaceInfo = theSystem->NET()->GetInterfaceInfo(index);
 
-	wxString strAdapter     = theSystem->NET()->GetAdapterName();
-	wxString strDescription = theSystem->NET()->GetDescription();
-	wxString strIP          = theSystem->NET()->GetIP();
-
-	wxString strNetInfo = wxT("Network - ") + strDescription + wxT(" (") + strIP + wxT(")");
-	netStaticBox->SetLabel(strNetInfo);
+	netStaticBox->SetLabel(wxT("Network - ") + strInterfaceInfo);
 }
 
 void DlgSystemResource::CreateCPUCoreList(wxSizer* pSizer)
@@ -227,7 +254,6 @@ void DlgSystemResource::CreateCPUCoreList(wxSizer* pSizer)
 			pCPUGraphView->SetCoreIndex(corenum++);
 
 			coreSizer->Add( pCPUGraphView, 1, wxEXPAND | wxALL, 5 );
-
 			theSystem->CPU()->AddEventListener(pCPUGraphView);
 		}
 
@@ -243,4 +269,12 @@ void DlgSystemResource::CreateCPUCoreList(wxSizer* pSizer)
 void DlgSystemResource::OnClickClose( wxCommandEvent& event )
 {
 	EndDialog(wxID_CLOSE);
+}
+
+void DlgSystemResource::OnComboSelected( wxCommandEvent& event )
+{
+	int iSel = event.GetSelection();
+	UpdateNETInfo(iSel);
+
+	theSystem->NET()->SetSelectAdapter(iSel);
 }

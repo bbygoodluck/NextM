@@ -45,6 +45,7 @@ private:
 
 	bool m_bSorted{false};
 	bool m_bSelected{false};
+	bool m_bFocus{false};
 
 	int  m_iSelIndex          = -1;
 	bool m_bAscending         = true;
@@ -59,13 +60,16 @@ private:
 
 	wxTimer m_timer;
 
-	std::thread m_thread;
-    std::atomic<bool> m_keepRunning{false};
+	bool m_bEnded{false};
+//	std::thread m_thread;
+//	std::atomic<bool> m_keepRunning{false};
 private:
 	void OnTimer(wxTimerEvent& event);
 	void OnListContextMenu(wxCommandEvent& event);
 	void OnListItemRightClick( wxListEvent& event );
 	void OnItemSelected(wxListEvent& event);
+	void OnSetFocus(wxFocusEvent& event);
+	void OnKillFocus(wxFocusEvent& event);
 	wxDECLARE_EVENT_TABLE();
 
 };

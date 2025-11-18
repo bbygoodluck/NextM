@@ -10,22 +10,42 @@ public:
 	~CCPU();
 
 public:
-	virtual void Init()   override;
-	virtual void Update() override;
+	void Init()   override;
+	void Update() override;
+	void Free()   override;
 
 	wxString GetProcessorName()   const { return m_strProcessor; }
 	size_t GetCoreCount()         const { return m_CPUCoreCount; }
-	unsigned long GetTotalUsage() const { return m_ulCPUTotalUage; }
-	unsigned long GetCPUCoreUsage(unsigned int index);
+
 	double GetUsage();
 
-private:
-	ULONGLONG SubtractTimes(const FILETIME& a, const FILETIME& b) {
-		ULONGLONG a64 = (((ULONGLONG)a.dwHighDateTime) << 32) | a.dwLowDateTime;
-		ULONGLONG b64 = (((ULONGLONG)b.dwHighDateTime) << 32) | b.dwLowDateTime;
+	void UnInitialize();
+	auto GetValue(const wxString& strKey) -> unsigned long;
+
+	ULONGLONG SubtractTimes(const FILETIME& ftA, const FILETIME& ftB)
+	{
+		ULONGLONG a64 = (((ULONGLONG)ftA.dwHighDateTime) << 32) | ftA.dwLowDateTime;
+		ULONGLONG b64 = (((ULONGLONG)ftB.dwHighDateTime) << 32) | ftB.dwLowDateTime;
 
 		return a64 - b64;
+
+//		LARGE_INTEGER a, b;
+//
+//		a.LowPart = ftA.dwLowDateTime;
+//		a.HighPart = ftA.dwHighDateTime;
+//
+//		b.LowPart = ftB.dwLowDateTime;
+//		b.HighPart = ftB.dwHighDateTime;
+//
+//		return a.QuadPart - b.QuadPart;
 	}
+
+#ifdef __WXMSW__
+	bool CollectQueryData();
+	bool InitializePDH();
+	bool IsInitializePDH() { return m_bPhdOK; }
+	bool AddCounter(const wxString& counterName);
+#endif // __WXMSW__
 
 private:
 	wxString m_strProcessor = wxT("");
@@ -36,13 +56,11 @@ private:
 	FILETIME idlePrev, kernelPrev, userPrev;
 
 #ifdef __WXMSW__
-	unsigned long* m_pArrayCore = nullptr;
-	HQUERY m_hCpuQuery;
-
-	HCOUNTER  m_hCounterCPUTotal;
-	HCOUNTER* m_phCounterCPUCore = nullptr;
-
+	HQUERY m_hCpuQuery = 0;
 	bool m_bPhdOK = false;
+
+	robin_hood::unordered_flat_map<wxString, Cpu::PPDHCOUNTERSTRUCT> m_Counters;
+	std::vector<wxString> m_vecCounters;
 #else
 	FILETIME m_ftPrevSysIdle;
 	FILETIME m_ftPrevSysKernel;
@@ -50,7 +68,7 @@ private:
 #endif // __WXMSW__
 
 private:
-	virtual void OnTimer(wxTimerEvent& event) override;
+	void OnTimer(wxTimerEvent& event) override;
 	wxDECLARE_EVENT_TABLE();
 };
 

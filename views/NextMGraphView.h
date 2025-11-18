@@ -139,7 +139,9 @@ public:
 	~CNextMGraphView();
 
 public:
-	void SetCoreIndex(unsigned int indx) { m_coreIndex = indx; }
+	void SetCoreIndex(unsigned int indx) {
+		m_coreIndex = indx;
+	}
 
 private:
 	void Render(wxDC* pDC);
@@ -166,14 +168,16 @@ private:
 	bool m_bThreadStop = false;
 
 	unsigned int m_coreIndex = 0;
+	unsigned int m_Index = 0;;
 	unsigned long m_coreUsage = 0;
 
 private:
 	void OnPaint(wxPaintEvent& event);
 	void OnErase(wxEraseEvent& event);
 	void OnSize(wxSizeEvent& event);
+	void OnTimer(wxTimerEvent& event);
 
-	virtual void UpdateListener(wxCommandEvent& event) override;
+	void UpdateListener(wxCommandEvent& event) override;
 	wxDECLARE_EVENT_TABLE();
 };
 

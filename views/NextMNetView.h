@@ -1,6 +1,8 @@
 #ifndef NEXTMNETVIEW_H_INCLUDED
 #define NEXTMNETVIEW_H_INCLUDED
 
+#include "../system/IUpdateListener.h"
+
 struct sParticle {
 	float x = 0.0f;
 	float y = 0.0f;
@@ -246,7 +248,132 @@ public:
 	}
 };
 
-class CNextMNetView : public wxWindow
+class CNetworkAdpData
+{
+	int speedVals[11] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
+	int widthVals[11] = {3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33};
+
+public:
+	CNetworkAdpData(const wxRect& rc, bool bDownload, const Net::net_stat& data)
+		: m_rc(rc)
+		, m_fSpeed(6.0f)
+		, IsDownload(bDownload)
+		, _data(data)
+	{
+		_xPos = bDownload ? rc.GetLeft() : rc.GetRight();
+		_yPos = rc.GetTop() + rand() % rc.GetHeight();
+
+		_speedindex = GetUnitIndex(data.speed, false, false, 0, false);
+		_str_speed = theUtility->floating_humanizer(data.speed, false, false, 0, false, true);
+
+		m_fSpeed = 6.0f + speedVals[_speedindex];
+		m_fWidth = 2.0f + (float)widthVals[_speedindex];
+	}
+
+	~CNetworkAdpData() {}
+
+public:
+	void Update() {
+
+		if(IsDownload)
+		{
+			if((m_rc.GetRight() - 10) < _xPos)
+				bExpired = true;
+
+			_xPos += m_fSpeed;
+		}
+		else
+		{
+			if(m_rc.GetLeft() > _xPos)
+				bExpired = true;
+
+			_xPos -= m_fSpeed;
+		}
+	}
+
+	void DrawSelf(wxDC* pDC)
+	{
+		pDC->SetPen(wxPen(wxColour(80, 80, 80)));
+		pDC->SetBrush(wxBrush(wxColour(80, 80, 80)));
+		pDC->DrawCircle(wxPoint(_xPos + 1, _yPos + 1), m_fWidth);
+
+		wxColour col = IsDownload ? colDn : colUp;
+
+		pDC->SetPen(wxPen(col));
+		pDC->SetBrush(wxBrush(col));
+
+		pDC->DrawCircle(wxPoint(_xPos, _yPos), m_fWidth);
+
+		if(_speedindex >= 2)
+		{
+			wxFont font(8, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, _T("Segoe UI"));
+
+			col = IsDownload ? wxColour(0, 255, 255) : wxColour(255, 255, 0);
+
+			pDC->SetFont(font);
+			pDC->SetTextForeground(col);
+			pDC->DrawText(_str_speed, _xPos - 20, _yPos - 7);
+		}
+	}
+
+private:
+
+	int GetUnitIndex(uint64_t value, const bool is_mega, const bool shorten, size_t start, const bool bit)
+	{
+		std::string out;
+		const size_t mult = (bit) ? 8 : 1;
+		const bool mega = is_mega;
+
+		value *= 100 * mult;
+
+		if (mega)
+		{
+			while (value >= 100000)
+			{
+				value /= 1000;
+				if (value < 100)
+					break;
+
+				start++;
+			}
+		}
+		else
+		{
+			while (value >= 102400)
+			{
+				value >>= 10;
+				if (value < 100)
+					break;
+
+				start++;
+			}
+		}
+
+		return start;
+	}
+public:
+	bool bExpired = false;
+	bool IsDownload = true;
+
+private:
+	wxRect m_rc;
+	float m_fSpeed;
+
+	int _xPos = 0;
+	int _yPos = 0;
+	int _speedindex = 0;
+	wxString _str_speed{wxT("")};
+	wxString _str_speed_bit{wxT("")};
+
+	Net::net_stat _data;
+
+	float m_fWidth = 3.0f;
+
+	wxColour colDn{255, 30, 128};
+	wxColour colUp{169, 207, 214};
+};
+
+class CNextMNetView : public wxWindow, public IUpdateListener
 {
 public:
 	explicit CNextMNetView(wxWindow* parent, const int nID, const wxSize& sz, long lStyle = CHILD_WINDOW_STYLE);
@@ -256,13 +383,15 @@ public:
 	void Start(int _milliseconds);
 	void Stop();
 
+	void AddNetIntefaces();
+
 protected:
 	void Render(wxDC* pDC);
 	void DrawBackGround(wxDC* pDC, const wxColour& colPen, const wxColour& colBrush);
 	void DrawData(wxDC* pDC);
 	void DisplayNetInfo(wxDC* pDC);
 
-	void UpdateData();
+//	void UpdateData();
 
 	void CreateBoilData();
 
@@ -282,8 +411,15 @@ private:
 
 	//전체크기
 	wxRect m_viewRect     = wxRect(0, 0, 0, 0);
-	wxRect m_viewReceived = wxRect(0, 0, 0, 0);
-	wxRect m_viewSend     = wxRect(0, 0, 0, 0);
+
+	//데이터 영역
+	wxRect m_viewDataArea{0, 0, 0, 0};
+	wxRect m_viewTextArea{0, 0, 0, 0};
+	wxRect m_viewRecvArea{0, 0, 0, 0};
+	wxRect m_viewSendArea{0, 0, 0, 0};
+
+	wxRect m_viewReceived{0, 0, 0, 0};
+	wxRect m_viewSend{0, 0, 0, 0};
 
 	float _fDelay = 1.0f;
 	float _fElaspsedTime = 0.1f;
@@ -302,8 +438,8 @@ private:
 	unsigned long ulOutData_ = 0;
 	unsigned long ulOutMaxbps_ = 0;
 
-	wxString m_strInData   = wxT("");
-	wxString m_strOutData  = wxT("");
+	wxString m_strInData    = wxT("");
+	wxString m_strOutData   = wxT("");
 	wxString m_strInMaxBps  = (wxT(""));
 	wxString m_strOutMaxBps = (wxT(""));
 
@@ -315,12 +451,16 @@ private:
 	std::list<CBoilling> vecBoildata;
 	float _fBoilDelay = 1.2f;
 
+	std::list<CNetworkAdpData> m_data;
+
+	Net::net_info _netInfo;
 private:
 	void OnPaint(wxPaintEvent& event);
 	void OnErase(wxEraseEvent& event);
 	void OnSize(wxSizeEvent& event);
-
 	void OnTimer(wxTimerEvent& event);
+
+	void UpdateListener(wxCommandEvent& event) override;
 	wxDECLARE_EVENT_TABLE();
 };
 
