@@ -1,6 +1,8 @@
 #include "../ginc.h"
 #include "../system/Sysinc.h"
 #include "NextMProcessView.h"
+#include "NextMProcessDetailView.h"
+#include "../dialog/DlgProcessDetail.h"
 
 #define CONTEXT_MENU_KILL_PROCESS        PROCESSVIEW_CONTEXT_MENU_START
 #define CONTEXT_MENU_VIEW_PROCESS_DETAIL PROCESSVIEW_CONTEXT_MENU_START + 1
@@ -9,6 +11,9 @@ wxBEGIN_EVENT_TABLE(CNextMProcessView, wxListCtrl)
 	EVT_MENU_RANGE(PROCESSVIEW_CONTEXT_MENU_START, PROCESSVIEW_CONTEXT_MENU_END, CNextMProcessView::OnListContextMenu)
 	EVT_SET_FOCUS(CNextMProcessView::OnSetFocus)
 	EVT_KILL_FOCUS(CNextMProcessView::OnKillFocus)
+	EVT_KEY_DOWN(CNextMProcessView::OnKeyDown)
+	EVT_LEFT_DCLICK(CNextMProcessView::OnMouseLButtonDBClick)
+
 wxEND_EVENT_TABLE()
 
 CNextMProcessView::CNextMProcessView(wxWindow* _parent, long style)
@@ -42,7 +47,12 @@ CNextMProcessView::CNextMProcessView(wxWindow* _parent, long style)
 	InitColumn();
 	InitList();
 
-	m_timer.Start(1500);
+	m_timer.Start(1200);
+
+	m_detailViewWidth = 150;
+	m_pViewDetail = nullptr;
+	m_pViewDetail = new CNextMProcessDetailView(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);//wxPoint(ptLeftTop.x + 3, ptScreen.y + 15), wxSize(rcThis.GetWidth() - 10, m_detailViewWidth);//detailW));
+	m_pViewDetail->Show(false);
 }
 
 CNextMProcessView::~CNextMProcessView()
@@ -58,6 +68,17 @@ CNextMProcessView::~CNextMProcessView()
 
 	this->Disconnect( wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, wxListEventHandler( CNextMProcessView::OnListItemRightClick ), NULL, this );
 	this->Disconnect(wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler(CNextMProcessView::OnItemSelected), NULL, this);
+
+	if(m_pViewDetail)
+	{
+		m_pViewDetail->Stop();
+		m_pViewDetail->Show(false);
+		m_pViewDetail->Clear();
+
+		delete m_pViewDetail;
+
+		m_pViewDetail = nullptr;
+	}
 }
 
 void CNextMProcessView::CreateContextMenu()
@@ -413,10 +434,19 @@ void CNextMProcessView::OnListContextMenu(wxCommandEvent& event)
 			}
 		}
 	}
+	else
+	{
+		DlgProcessDetail dlg(this);
+		dlg.SetProcessID(ulProcessID);
+
+		dlg.ShowModal();
+	}
 }
 
 void CNextMProcessView::OnItemSelected(wxListEvent& event)
 {
+	m_clickPoint = event.GetPoint();
+
 	m_iSelIndex = event.GetIndex();
 	SetItemFocus(m_iSelIndex);
 }
@@ -426,7 +456,6 @@ void CNextMProcessView::SetItemFocus(int _itemIndex)
 	if(_itemIndex < 0)
 		return;
 
-	m_bSelected = true;
 	wxString strProcessID = GetItemText(_itemIndex, 1);
 
 	strProcessID.ToCULong(&m_ulSelProcessID);
@@ -449,4 +478,63 @@ void CNextMProcessView::OnSetFocus(wxFocusEvent& event)
 void CNextMProcessView::OnKillFocus(wxFocusEvent& event)
 {
 	m_bFocus = false;
+}
+
+void CNextMProcessView::OnKeyDown(wxKeyEvent& event)
+{
+	int iKeyCode = event.GetKeyCode();
+	if (iKeyCode == WXK_ESCAPE)
+	{
+		if(m_pViewDetail)
+		{
+			m_pViewDetail->Stop();
+			m_pViewDetail->Show(false);
+			m_pViewDetail->Clear();
+
+			m_bSelected = false;
+		}
+	}
+}
+
+void CNextMProcessView::OnMouseLButtonDBClick(wxMouseEvent& event)
+{
+	if(m_iSelIndex < 0)
+		return;
+
+	m_bSelected = true;
+
+	wxPoint pt = event.GetPosition();
+	wxRect rcThis = this->GetClientRect();
+
+	int left   = rcThis.GetLeft();
+	int top    = rcThis.GetTop();
+	int right  = rcThis.GetRight();
+	int bottom = rcThis.GetBottom();
+
+	wxPoint ptScreen      = ClientToScreen(pt);
+	wxPoint ptLeftTop     = ClientToScreen(wxPoint(left, top));
+	wxPoint ptRightBottom = ClientToScreen(wxPoint(right, bottom));
+
+	wxString strProcessID = this->GetItemText(m_iSelIndex, 1);
+
+//	int detailW = 150;
+//	m_pViewDetail = nullptr;
+//	m_pViewDetail = new CNextMProcessDetailView(this, wxID_ANY, wxPoint(ptLeftTop.x + 3, ptScreen.y + 15), wxSize(rcThis.GetWidth() - 10, detailW));
+	m_pViewDetail->SetProcessId(strProcessID);
+	m_pViewDetail->Show();
+
+	m_pViewDetail->SetPosition(wxPoint(ptLeftTop.x + 3, ptScreen.y + 15));
+	m_pViewDetail->SetSize(wxSize(rcThis.GetWidth() - 10, m_detailViewWidth));
+
+	wxPoint ptDetail = m_pViewDetail->GetPosition();
+
+	int yPos = ptDetail.y;
+
+	if((yPos + m_detailViewWidth /* detailW */) > ptRightBottom.y)
+	{
+		wxPoint ptNew{ptLeftTop.x, ptScreen.y - 180};
+		m_pViewDetail->Move(ptNew);
+	}
+
+	m_pViewDetail->Start(1100);
 }

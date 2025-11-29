@@ -114,6 +114,11 @@
 #include "../utility/ImageList.h"
 #define theImageList (CImageList::Get())
 
+////DCUtility
+#include "../utility/DCUtility.h"
+#define theDCUtil (CDCUtility::Get())
+
+
 #include "../interface/NextMNCD.h"
 //디렉토리관리
 #define theNCD              (CNextMNCD::Get())

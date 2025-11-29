@@ -69,7 +69,7 @@ void CNextMMemView::OnSize(wxSizeEvent& event)
 	m_viewRect = GetClientRect();
 	RecomputeParabola();
 #endif // BALL
-    theUtility->RefreshWindow(this, m_viewRect);
+    theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMMemView::OnPaint(wxPaintEvent& event)
@@ -196,7 +196,7 @@ void CNextMMemView::DrawRuler(wxDC* pDC)
 void CNextMMemView::OnTimer(wxTimerEvent& event)
 {
 	UpdateData();
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMMemView::UpdateData()

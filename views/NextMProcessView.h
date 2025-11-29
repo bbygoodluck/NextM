@@ -2,9 +2,10 @@
 #define NEXTMPROCESSVIEW_H_INCLUDED
 
 #include <wx/listctrl.h>
-#include <atomic>
-#include <thread>
+//#include <atomic>
+//#include <thread>
 
+class CNextMProcessDetailView;
 class CNextMProcessView : public wxListCtrl
 {
 	struct sListColumnItem {
@@ -46,6 +47,7 @@ private:
 	bool m_bSorted{false};
 	bool m_bSelected{false};
 	bool m_bFocus{false};
+	bool m_bEnded{false};
 
 	int  m_iSelIndex          = -1;
 	bool m_bAscending         = true;
@@ -59,10 +61,11 @@ private:
 	bool m_bNewOrDelProcess{false};
 
 	wxTimer m_timer;
+	wxPoint m_clickPoint{0, 0};
 
-	bool m_bEnded{false};
-//	std::thread m_thread;
-//	std::atomic<bool> m_keepRunning{false};
+	int m_detailViewWidth{0};
+	CNextMProcessDetailView* m_pViewDetail{nullptr};
+
 private:
 	void OnTimer(wxTimerEvent& event);
 	void OnListContextMenu(wxCommandEvent& event);
@@ -70,6 +73,9 @@ private:
 	void OnItemSelected(wxListEvent& event);
 	void OnSetFocus(wxFocusEvent& event);
 	void OnKillFocus(wxFocusEvent& event);
+
+	void OnKeyDown(wxKeyEvent& event);
+	void OnMouseLButtonDBClick(wxMouseEvent& event);
 	wxDECLARE_EVENT_TABLE();
 
 };

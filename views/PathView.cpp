@@ -100,7 +100,7 @@ void CPathView::OnSize(wxSizeEvent& event)
 	wxSize size = event.GetSize();
 	m_memDC.ChangeViewSize(size);
 
-    theUtility->RefreshWindow(this, m_viewRect);
+    theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CPathView::OnPaint(wxPaintEvent& event)
@@ -337,7 +337,7 @@ void CPathView::OnMouseMove(wxMouseEvent& event)
 			strToolTipPath += iter->m_strName + SLASH;
 	}
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CPathView::OnMouseLButtonClick(wxMouseEvent& event)
@@ -527,7 +527,7 @@ void CPathView::OnLeaveWindow(wxMouseEvent& event)
 	m_bMouseOver = false;
 	m_iMouseOverIndex = -1;
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CPathView::AddPath(const wxString& strPath)
@@ -537,7 +537,7 @@ void CPathView::AddPath(const wxString& strPath)
 	m_bChangedPath = true;
 	m_strPath = strPath;
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CPathView::OnEnterTextCtrl(wxCommandEvent& event)

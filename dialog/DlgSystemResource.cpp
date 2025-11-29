@@ -16,7 +16,6 @@
 DlgSystemResource::DlgSystemResource( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
 {
 	SetIcon(wxIcon("wxwin"));
-	CenterOnScreen();
 
 	wxBusyInfo info
     (
@@ -141,14 +140,15 @@ DlgSystemResource::DlgSystemResource( wxWindow* parent, wxWindowID id, const wxS
 	this->Layout();
 
 	this->Centre( wxBOTH );
+	CenterOnScreen();
 
 	// Connect Events
 	this->Connect( wxEVT_INIT_DIALOG, wxInitDialogEventHandler( DlgSystemResource::OnInitDialog ) );
 	m_btnClose->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( DlgSystemResource::OnClickClose ), NULL, this );
 	m_cmbInterface->Connect( wxEVT_COMBOBOX, wxCommandEventHandler( DlgSystemResource::OnComboSelected ), NULL, this );
 
-
 	UpdateNETInfo(0);
+
 #ifdef __WXMSW__
 	//프로세스 생성/삭제 이벤트 등록
 	CNextMWMI* pWMI = theSystem->PROCESS()->GetWMI();

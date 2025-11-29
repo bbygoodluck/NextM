@@ -58,13 +58,13 @@ void CNextMNetView::OnSize(wxSizeEvent& event)
 	wxSize size = event.GetSize();
 	m_memDC.ChangeViewSize(size);
 
-    theUtility->RefreshWindow(this, m_viewRect);
+    theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMNetView::OnTimer(wxTimerEvent& event)
 {
 //	UpdateData();
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMNetView::OnPaint(wxPaintEvent& event)
@@ -346,7 +346,7 @@ void CNextMNetView::UpdateListener(wxCommandEvent& event)
 			m_data.push_back({rc, bDownload, net});
 	}
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 //void CNextMNetView::UpdateData()

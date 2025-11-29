@@ -7,6 +7,13 @@
 #include <string>
 #include <deque>
 
+constexpr unsigned int CONST_XAXIS_GAP_PIXEL = 5;
+constexpr unsigned int CONST_YAXIS_RATIO     = 4;     // 25, 50, 75, 100%
+constexpr unsigned int CONST_YAXIS_START     = 0;
+constexpr unsigned int CONST_RATIO_GAP       = 20;
+constexpr int CONST_SECOND_GAP               = 5;
+constexpr unsigned int CONST_SECOND_HEIGHT   = 5;
+
 namespace Cpu {
 #ifdef __WXMSW__
 	#define CPU_TOTAL wxT("\\Processor(_Total)\\% Processor Time")
@@ -59,27 +66,42 @@ namespace Proc {
 		_bstr_t ReadTransferCount  = L"ReadTransferCount";
 		_bstr_t WriteTransferCount = L"WriteTransferCount";
 		_bstr_t ParentProcessId    = L"ParentProcessId";
+		_bstr_t Status             = L"Status";
 		_bstr_t newProcess         = L"SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process'";
 		_bstr_t delProcess         = L"SELECT * FROM __InstanceDeletionEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process'";
+	};
+
+	struct CpuTimes {
+		FILETIME _ftSysKernel;
+		FILETIME _ftSysUser;
+		FILETIME _ftProcKernel;
+		FILETIME _ftProcUser;
 	};
 
 	typedef struct _PROCESS_INFO {
 		HANDLE _hProcess = nullptr;
 		unsigned long _ulProcessID = 0x00;
-		wxString _strProcessName = wxT("");
-		wxString _strProcessFullPath = wxT("");
-		wxString _strFileDescription = wxT("");
-		wxString _strCommandLine     = wxT("");
-		wxString _strCompanyName     = wxT("");
-		wxString _strUserName        = wxT("");
-		wxString _strDomainName      = wxT("");
-		wxString _strDomainAndUser   = wxT("");
-		wxString _strUserModeTime    = wxT("");
-		wxString _strKernelModeTime  = wxT("");
-		wxString _strStatus          = wxT("");
-		unsigned int _threadsCount   = 0;
-		unsigned long long _readTransferCount = 0;
-		unsigned long long _writeTransferCount = 0;
+		unsigned int _ulParentProcId = 0;
+
+		wxString _strProcessName       = wxT("");
+		wxString _strParentProcessName = wxT("");
+		wxString _strProcessFullPath   = wxT("");
+		wxString _strFileDescription   = wxT("");
+		wxString _strCommandLine       = wxT("");
+		wxString _strCompanyName       = wxT("");
+		wxString _strUserName          = wxT("");
+		wxString _strDomainName        = wxT("");
+		wxString _strDomainAndUser     = wxT("");
+		wxString _strUserModeTime      = wxT("");
+		wxString _strKernelModeTime    = wxT("");
+		wxString _strStatus            = wxT("");
+		wxString _readTransferCount    = wxT("");
+		wxString _writeTransferCount   = wxT("");
+		wxString _strCreationDate      = wxT("");
+		wxString _strElapsedTime       = wxT("");
+
+		unsigned int _threadsCount     = 0;
+
 		unsigned long long _PrivateSize = 0;
 		unsigned long long _WorkingSetSize = 0;
 
@@ -88,15 +110,6 @@ namespace Proc {
 		int iIconIndex = -1;
 		int iOvelayIndex = -1;
 
-		//system total times
-		FILETIME m_ftPrevSysKernel;
-		FILETIME m_ftPrevSysUser;
-
-		//process times
-		FILETIME m_ftPrevProcKernel;
-		FILETIME m_ftPrevProcUser;
-
-		short m_nCpuUsage = -1;
 		volatile LONG m_lRunCount;
 		ULONGLONG m_dwLastRun = 0;
 
@@ -109,19 +122,10 @@ namespace Proc {
 
 		inline bool IsFirstRun() const { return (m_dwLastRun == 0); }
 
-//		FILETIME _ftSysKernel;
-//		FILETIME _ftSysUser;
-//		FILETIME _ftProcKernel;
-//		FILETIME _ftProcUser;
-//
-//		FILETIME _ftLastCPU;
-//		FILETIME _ftLastSysCPU;
-//		FILETIME _ftLastUserCPU;
-//
-//		ULARGE_INTEGER _lastCPU;
-//		ULARGE_INTEGER _lastSysCPU;
-//		ULARGE_INTEGER _lastUserCPU;
+		CpuTimes cpuTimes;
 
+		uint64_t cpu_t = 0;
+		uint64_t cpu_s = 0;
 	} PROCESS_INFO, *PPROCESS_INFO;
 #else
 #endif // __WXMSW__

@@ -29,7 +29,7 @@ void CNextMCPUSegView::OnSize(wxSizeEvent& event)
 	wxSize size = event.GetSize();
 	m_memDC.ChangeViewSize(size);
 
-    theUtility->RefreshWindow(this, m_viewRect);
+    theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMCPUSegView::OnPaint(wxPaintEvent& event)
@@ -125,5 +125,5 @@ void CNextMCPUSegView::UpdateListener(wxCommandEvent& event)
 	DlgSystemResource* pDlg = (DlgSystemResource *)this->GetParent();
 	pDlg->UpdateCPUUsage(m_ulUsage);
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }

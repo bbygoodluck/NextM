@@ -41,17 +41,21 @@ public:
 	float GetProcessCPUUsage(Proc::PROCESS_INFO* _pPsInfo);
 	void InitProcessCPUTime(Proc::PROCESS_INFO* _pPsInfo);
 	void UpdateProcessCPUTime(Proc::PROCESS_INFO* _pPsInfo);
+
 	//IO/Read, Write
 	void UpdateIOReadWrite(Proc::PROCESS_INFO* _pPsInfo);
+
 	//Process Memory
 	void UpdateProcessMemory(Proc::PROCESS_INFO* _pPsInfo);
+
+	//Parent Process Info
+	void GetParentProcessInfo(Proc::PROCESS_INFO* _pPsInfo);
 
 	Proc::PROCESS_INFO* UpdateProcessInfo(unsigned long _ulProcessId);
 	Proc::PROCESS_INFO* GetInfo(unsigned long ulProcessID);
 
-//	void InitKernalTime() {
-//		GetSystemTimes(&m_ftSysIdle, &m_ftSysKernel, &m_ftSysUser);
-//	}
+	void UpdateElapsedTime(Proc::PROCESS_INFO* _pPsInfo);
+
 private:
 #ifdef __WXMSW__
 	bool SetPrivilige(LPCTSTR lpszPrivilege, bool bEnablePrivilege = true);
@@ -67,19 +71,15 @@ private:
 
 	wxWindow* m_pWindow = nullptr;
 
-	ULONGLONG m_dwLastRun = 0;
-	volatile LONG m_lRunCount = 0;
-
+	uint64_t _systime;
 #ifdef __WXMSW__
 	CNextMWMI m_wmi;
 	Proc::WMIProcQuerys procQuery{};
-
-//	FILETIME m_ftSysIdle, m_ftSysKernel, m_ftSysUser;
 #else
 #endif // __WXMSW__
 
 private:
-	virtual void OnTimer(wxTimerEvent& event) override;
+	void OnTimer(wxTimerEvent& event) override;
 	wxDECLARE_EVENT_TABLE();
 };
 

@@ -52,7 +52,7 @@ void CNextMTooltipView::OnSize(wxSizeEvent& event)
 	wxSize size = event.GetSize();
 	m_memDC.ChangeViewSize(size);
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMTooltipView::SetTooltipText(const wxString& strTooltip)

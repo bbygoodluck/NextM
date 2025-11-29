@@ -42,7 +42,7 @@ void CNextMGraphView::OnSize(wxSizeEvent& event)
 	wxSize size = event.GetSize();
 	m_memDC.ChangeViewSize(size);
 
-    theUtility->RefreshWindow(this, m_viewRect);
+    theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMGraphView::OnPaint(wxPaintEvent& event)
@@ -231,11 +231,11 @@ void CNextMGraphView::UpdateListener(wxCommandEvent& event)
 	if(m_coreUsage >= 75)
 		bLineDraw = true;
 
-	nodeList.push_back(m_coreUsage, xPos, m_viewGraphRect.GetHeight(), bLineDraw);
+	nodeList.push_back(m_coreUsage, xPos, m_viewGraphRect.GetHeight(), bLineDraw, true);
 
 	GRAPH_DATA_NODE<unsigned int>* firstNode = nodeList.GetFirst();
 	if(firstNode->_iXPos > m_viewGraphRect.GetRight())
 		nodeList.pop_front();
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }

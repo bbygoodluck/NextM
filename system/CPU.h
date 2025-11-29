@@ -24,20 +24,23 @@ public:
 
 	ULONGLONG SubtractTimes(const FILETIME& ftA, const FILETIME& ftB)
 	{
-		ULONGLONG a64 = (((ULONGLONG)ftA.dwHighDateTime) << 32) | ftA.dwLowDateTime;
-		ULONGLONG b64 = (((ULONGLONG)ftB.dwHighDateTime) << 32) | ftB.dwLowDateTime;
+		ULONGLONG a64 = FileTimeToULL(ftA);//(((ULONGLONG)ftA.dwHighDateTime) << 32) | ftA.dwLowDateTime;
+		ULONGLONG b64 = FileTimeToULL(ftB);//(((ULONGLONG)ftB.dwHighDateTime) << 32) | ftB.dwLowDateTime;
 
 		return a64 - b64;
+	}
 
-//		LARGE_INTEGER a, b;
-//
-//		a.LowPart = ftA.dwLowDateTime;
-//		a.HighPart = ftA.dwHighDateTime;
-//
-//		b.LowPart = ftB.dwLowDateTime;
-//		b.HighPart = ftB.dwHighDateTime;
-//
-//		return a.QuadPart - b.QuadPart;
+	ULONGLONG FileTimeToULL(const FILETIME& ft) {
+		return ((((ULONGLONG)ft.dwHighDateTime) << 32) | ft.dwLowDateTime);
+	}
+
+	void GetSystemCPUTime(ULONGLONG& idle, ULONGLONG& kernel, ULONGLONG& user) {
+		FILETIME idleFT, kernelFT, userFT;
+
+		GetSystemTimes(&idleFT, &kernelFT, &userFT);
+		idle   = FileTimeToULL(idleFT);
+		kernel = FileTimeToULL(kernelFT);
+		user   = FileTimeToULL(userFT);
 	}
 
 #ifdef __WXMSW__

@@ -179,7 +179,7 @@ bool CLocalFileListView::LoadDirectory(const wxString& strPath)
 	m_pFileSystemWatcher->StartWatch(strPath);
 
 	m_bDirLoaded = true;
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 
 	return true;
 }
@@ -214,7 +214,7 @@ void CLocalFileListView::ResetDiskDriveItems()
 	m_bSizeOrColumnChanged = true;
 	//파일시스템 감시의 변경사항이 아닌경우만 처리
 	//파일시스템 감시상의 Refresh는 OnFileSystemWatcher함수에서 별도 처리됨
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CLocalFileListView::Render(wxDC* pDC)
@@ -347,7 +347,7 @@ void CLocalFileListView::OnFileSystemWatcher(wxCommandEvent& event)
 			return;
 	}
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CLocalFileListView::DoCreate(CWatcherItem* pItem)
@@ -727,5 +727,5 @@ void CLocalFileListView::OnUpdateDriveSizeInfo(wxCommandEvent& event)
 		}
 	}
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }

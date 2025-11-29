@@ -103,7 +103,7 @@ void CNextMNCDView::OnSize(wxSizeEvent& event)
 	m_memDC.ChangeViewSize(size);
 
 	m_bSizeChanged = true;
-    theUtility->RefreshWindow(this, m_viewRect);
+    theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMNCDView::Render(wxDC* pDC)
@@ -434,28 +434,29 @@ wxString CNextMNCDView::CalcEllipse(wxDC* pDC, const wxString& strSrc, const int
 	wxString strDisp(wxT(""));
 	wxString strName(strSrc);
 
-	wxSize szNameSize = pDC->GetTextExtent(strName);
+//	wxSize szNameSize = pDC->GetTextExtent(strName);
+//
+//	int iLen = strName.length();
+//
+//	if (szNameSize.GetWidth() < iDispWidth)
+//		strDisp = strName;
+//	else
+//	{
+//		for (int iIndex = 0; iIndex < iLen; iIndex++)
+//		{
+//			strDisp = strName.Left(iIndex + 1);
+//			wxSize sizeText = pDC->GetTextExtent(wxString(strDisp + wxT("...")));
+//			if ((sizeText.GetWidth()) >= iDispWidth)
+//			{
+//				strDisp = strName.Left(iIndex);
+//				break;
+//			}
+//		}
+//
+//		strDisp += wxT("...");
+//	}
 
-	int iLen = strName.length();
-
-	if (szNameSize.GetWidth() < iDispWidth)
-		strDisp = strName;
-	else
-	{
-		for (int iIndex = 0; iIndex < iLen; iIndex++)
-		{
-			strDisp = strName.Left(iIndex + 1);
-			wxSize sizeText = pDC->GetTextExtent(wxString(strDisp + wxT("...")));
-			if ((sizeText.GetWidth()) >= iDispWidth)
-			{
-				strDisp = strName.Left(iIndex);
-				break;
-			}
-		}
-
-		strDisp += wxT("...");
-	}
-
+	strDisp = theDCUtil->EllipseStr(pDC, strSrc, iDispWidth);
 	return strDisp;
 }
 
@@ -715,7 +716,7 @@ void CNextMNCDView::ProcessKeyEvent(const int iKeyCode)
 	}
 
 	m_pParent->SetNodePath((*m_itIndex)->_fullName);
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 bool CNextMNCDView::MoveLeft()
@@ -893,7 +894,7 @@ void CNextMNCDView::ResetBaseIteratorDepth()
 
 void CNextMNCDView::OnSetFocus(wxFocusEvent& event)
 {
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMNCDView::OnScroll(wxScrollWinEvent& event)
@@ -915,7 +916,7 @@ void CNextMNCDView::OnScroll(wxScrollWinEvent& event)
 		this->SetScrollPos(wxHORIZONTAL, m_iCurDepth);
 	}
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMNCDView::ScrollVerticalProcess(wxEventType evtType, bool bWheel, int iThumbTrackPos)
@@ -1085,7 +1086,7 @@ void CNextMNCDView::FindMatch(const wxString& strKey)
 					m_itStartNode = theNCD->Begin();
 			}
 
-			theUtility->RefreshWindow(this, m_viewRect);
+			theDCUtil->Refresh(this, m_viewRect);
 
 			break;
 		}
@@ -1122,7 +1123,7 @@ void CNextMNCDView::OnTextCtrlEnter(wxCommandEvent& event)
 
 	event.Skip();
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMNCDView::OnCharHookFromTextCtrl(wxKeyEvent& event)
@@ -1176,7 +1177,7 @@ void CNextMNCDView::OnMouseLBClick(wxMouseEvent& event)
 {
 	wxPoint pt = event.GetPosition();
 	if(FindMouseClickItem(pt))
-		theUtility->RefreshWindow(this, m_viewRect);
+		theDCUtil->Refresh(this, m_viewRect);
 
 	event.Skip();
 }
@@ -1227,7 +1228,7 @@ void CNextMNCDView::OnMouseWheel(wxMouseEvent& event)
 	}
 
 	this->SetScrollPos(wxVERTICAL, (*m_itStartNode)->_row);
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMNCDView::AddDirectory()
@@ -1263,7 +1264,7 @@ void CNextMNCDView::AddDirectory()
 	LoadDirInfo();
 	Thaw();
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CNextMNCDView::DeleteDirectory()

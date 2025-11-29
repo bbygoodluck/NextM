@@ -212,7 +212,7 @@ void CNextMNewStatusBar::OnSize(wxSizeEvent& event)
 	m_memDC.ChangeViewSize(size);
 
 	m_bChangedSize = true;
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 /*
@@ -315,11 +315,11 @@ void CNextMNewStatusBar::SetStatusText(const wxString& text, int n)
 		}
 
 		if(bMore)
-			theUtility->RefreshWindow(this, m_panes[n].GetRect());
+			theDCUtil->Refresh(this, m_panes[n].GetRect());
 	}
 
 	if(m_bSet && !bReturn)
-		theUtility->RefreshWindow(this, m_panes[n].GetRect());
+		theDCUtil->Refresh(this, m_panes[n].GetRect());
 }
 
 void CNextMNewStatusBar::SetStatusRect(int n, const wxRect& rc)
@@ -361,7 +361,7 @@ void CNextMNewStatusBar::SetColSpacing(const int space)
 void CNextMNewStatusBar::SetStatusMouseOverColor(int n, bool bMouseOver)
 {
 	m_panes[n].SetMouseOver(bMouseOver);
-	theUtility->RefreshWindow(this, m_panes[n].GetRect());
+	theDCUtil->Refresh(this, m_panes[n].GetRect());
 }
 
 void CNextMNewStatusBar::Settings(wxDC* pDC)
@@ -621,7 +621,7 @@ void CNextMNewStatusBar::OnMouseLeave(wxMouseEvent& event)
 	for(size_t i = 0; i < m_panes.GetCount(); i++)
 		m_panes[i].SetMouseOver(false);
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 	event.Skip();
 }
 

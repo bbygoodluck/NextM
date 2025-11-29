@@ -134,33 +134,6 @@ wxString CUtility::GetFileName(const wxString& strFullPath, bool IsAppendExt)
 	return _strpathname + (IsAppendExt ? wxT(".") + _strext : wxT(""));
 }
 
-void CUtility::RefreshWindow(wxWindow* pWindow, const wxRect& rect, bool bUpdate)
-{
-#ifdef __WXMSW__
-	HWND hWnd = pWindow->GetHWND();
-	if (rect.GetWidth() != 0)
-	{
-		RECT mswRect;
-		const RECT* pRect;
-
-		wxCopyRectToRECT(rect, mswRect);
-		pRect = &mswRect;
-
-		//	INT flags = RDW_INVALIDATE | RDW_NOCHILDREN | RDW_UPDATENOW | RDW_ERASE;
-		//	::RedrawWindow(hWnd, pRect, NULL, flags);
-		::InvalidateRect(hWnd, pRect, false);
-	}
-	else
-		pWindow->Refresh(false);
-
-	if (bUpdate)
-		pWindow->Update();
-#else
-	pWindow->RefreshRect(rect, false);
-	pWindow->Update();
-#endif
-}
-
 bool CUtility::IsAllowAttr(const unsigned long _lattr)
 {
 	unsigned long lattr = _lattr & larrAttr[_gAttrIndex];
@@ -631,6 +604,20 @@ wxString CUtility::floating_humanizer(uint64_t value, const bool is_mega, const 
 	if (per_second) out += (bit) ? "ps" : "/s";
 
 	return wxString(out);
+}
+
+wxString CUtility::sec_to_dhms(size_t seconds, bool no_days, bool no_seconds)
+{
+	size_t days = seconds / 86400; seconds %= 86400;
+	size_t hours = seconds / 3600; seconds %= 3600;
+	size_t minutes = seconds / 60; seconds %= 60;
+
+	wxString strout = (not no_days and days > 0 ? std::to_string(days) + "d " : "")
+					+ (hours < 10 ? "0" : "") + std::to_string(hours) + ':'
+					+ (minutes < 10 ? "0" : "") + std::to_string(minutes)
+					+ (not no_seconds ? ":" + wxString(std::cmp_less(seconds, 10) ? "0" : "") + std::to_string(seconds) : "");
+
+	return strout;
 }
 
 #ifdef __WXMSW__

@@ -207,13 +207,13 @@ void CFileListView::Initialize()
 void CFileListView::OnSetFocus(wxFocusEvent& event)
 {
 	m_bSetFocus = true;
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CFileListView::OnKillFocus(wxFocusEvent& event)
 {
 	m_bSetFocus = false;
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CFileListView::OnErase(wxEraseEvent& event)
@@ -391,7 +391,7 @@ void CFileListView::PreTranslateKeyEvent(wxKeyEvent& event)
 	}
 
 	if(bRefresh)
-		theUtility->RefreshWindow(this, m_viewRect);
+		theDCUtil->Refresh(this, m_viewRect);
 }
 
 bool CFileListView::ProcessKeyEvent(int iKeyCode)
@@ -530,7 +530,7 @@ bool CFileListView::ProcessKeyEvent(int iKeyCode)
 			return false;
 	}
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 	return true;
 }
 
@@ -859,7 +859,7 @@ void CFileListView::OnSize(wxSizeEvent& event)
 	m_bSizeOrColumnChanged = true;
 	m_dispNameInfoMap.clear();
 
-    theUtility->RefreshWindow(this, m_viewRect);
+    theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CFileListView::OnMouseLBottonDown(wxMouseEvent& event)
@@ -980,7 +980,7 @@ void CFileListView::OnMouseWheel(wxMouseEvent& event)
 			m_iCurrentItemIndex = 0;
 	}
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CFileListView::DoMouseProcess(const wxPoint& pt, bool bDblClick)
@@ -992,7 +992,7 @@ void CFileListView::DoMouseProcess(const wxPoint& pt, bool bDblClick)
 			ProcessEnterKey(WXK_RETURN);
 
 		m_bMouseClickItemFound = true;
-		theUtility->RefreshWindow(this, m_viewRect);
+		theDCUtil->Refresh(this, m_viewRect);
 	}
 }
 
@@ -1857,6 +1857,10 @@ wxString CFileListView::CalcStrEllipse(wxDC* pDC, const wxString& strSrc, bool I
 		strKey.MakeLower();
 #endif
 
+	std::unordered_map<wxString, wxString>::const_iterator fIter = m_dispNameInfoMap.find(strKey);
+	if (fIter != m_dispNameInfoMap.end())
+		return fIter->second;
+
 	CPositionInfo posInfo = m_posList.at(0);
 
 	wxString strName(strSrc);
@@ -1867,31 +1871,25 @@ wxString CFileListView::CalcStrEllipse(wxDC* pDC, const wxString& strSrc, bool I
 	int iDispWidth = IsDrive ? posInfo.m_mainRect.GetWidth() - 35 : posInfo.m_nameRect.GetWidth();
 	int iNameWidth = szNameSize.GetWidth();
 
-	int iLen = strName.Len();
+//	int iLen = strName.Len();
+	strDisp = theDCUtil->EllipseStr(pDC, strName, iDispWidth);
 
 	if (iNameWidth > iDispWidth)
-	{
-		std::unordered_map<wxString, wxString>::const_iterator fIter = m_dispNameInfoMap.find(strKey);
-		if (fIter != m_dispNameInfoMap.end())
-			return fIter->second;
-
-		for (int iIndex = 0; iIndex < iLen; iIndex++)
-		{
-			strDisp = strName.Left(iIndex + 1);
-			wxSize sizeText = pDC->GetTextExtent(wxString(strDisp + wxT("...")));
-
-			if ((sizeText.GetWidth()) > iDispWidth)
-			{
-				strDisp = strName.Left(iIndex);
-				break;
-			}
-		}
-
-		strDisp += wxT("...");
 		m_dispNameInfoMap.insert(std::make_pair(strKey, strDisp));
-	}
-	else
-		strDisp = strName;
+
+//		for (int iIndex = 0; iIndex < iLen; iIndex++)
+//		{
+//			strDisp = strName.Left(iIndex + 1);
+//			wxSize sizeText = pDC->GetTextExtent(wxString(strDisp + wxT("...")));
+//
+//			if ((sizeText.GetWidth()) > iDispWidth)
+//			{
+//				strDisp = strName.Left(iIndex);
+//				break;
+//			}
+//		}
+//
+//		strDisp += wxT("...");
 
 	return strDisp;
 }
@@ -1993,7 +1991,7 @@ void CFileListView::GetSelectedItems(std::list<wxString>& lstSrc, bool IsCut)
 	}
 
 	if(IsCut)
-		theUtility->RefreshWindow(this, m_viewRect);
+		theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CFileListView::SelectedItemsClear(bool bDeleted)
@@ -2010,7 +2008,7 @@ void CFileListView::SelectedItemsClear(bool bDeleted)
 			itSel++;
 		}
 
-		theUtility->RefreshWindow(this, m_viewRect);
+		theDCUtil->Refresh(this, m_viewRect);
 	}
 
 	m_hashSelectedItem.clear();
@@ -2083,14 +2081,14 @@ wxThread::ExitCode CFileListView::Entry()
 		if((iPositionSize > 0) && (iPosIndex < iPositionSize) )
 		{
 			std::vector<CPositionInfo>::const_iterator posIterator = m_posList.begin() + iPosIndex;
-			theUtility->RefreshWindow(this, posIterator->m_iconRect);
+			theDCUtil->Refresh(this, posIterator->m_iconRect);
 
 			iPosIndex++;
 		}
 	}
 
 	if(m_bFileImageInfoReadStarted)
-		theUtility->RefreshWindow(this, m_viewRect);
+		theDCUtil->Refresh(this, m_viewRect);
 
 	return (wxThread::ExitCode)0;
 }
@@ -2424,7 +2422,7 @@ void CFileListView::ExecuteExternProgram(int iIndex)
 		}
 
 		SelectedItemsClear();
-		theUtility->RefreshWindow(this, m_viewRect);
+		theDCUtil->Refresh(this, m_viewRect);
 	}
 }
 
@@ -2480,7 +2478,7 @@ void CFileListView::SelectAllItemOrRelease(bool bAllSelect)
 		m_pSelectedItemView->Show(false);
 
 
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 
@@ -2564,13 +2562,13 @@ void CFileListView::GotoVisitDirectory()
 void CFileListView::OnChangeViewColumn(wxCommandEvent& event)
 {
 	m_bSizeOrColumnChanged = true;
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CFileListView::OnChangeSorting(wxCommandEvent& event)
 {
 	SortStart();
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 void CFileListView::OnShowFavoriteFromStatus(wxCommandEvent& event)
@@ -2581,7 +2579,7 @@ void CFileListView::OnShowFavoriteFromStatus(wxCommandEvent& event)
 void CFileListView::OnShowDirectoryNumber(wxCommandEvent& event)
 {
 	m_bDirectoryNumbering = !m_bDirectoryNumbering;
-	theUtility->RefreshWindow(this, m_viewRect);
+	theDCUtil->Refresh(this, m_viewRect);
 }
 
 
@@ -2684,7 +2682,7 @@ void CFileListView::SetDnDUpdate()
 	if(!m_bSetFocus && theDnD->IsDropped())
 		theSplitterManager->ChangeSplitView();
 
-	theUtility->RefreshWindow(this, m_viewRectDisp);
+	theDCUtil->Refresh(this, m_viewRectDisp);
 }
 
 int CFileListView::DropWindowSelectItemType()

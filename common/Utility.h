@@ -49,9 +49,6 @@ public:
     //메세지 표시
 	void ShowMessageBox(const wxString& strMsg, int iRetCode);
 
-	//화면 다시그리기
-	void RefreshWindow(wxWindow* pWindow, const wxRect& rect = wxRect(0, 0, 0, 0), bool bUpdate = false);
-
 	//허용 속성
 	bool IsAllowAttr(const unsigned long _lattr);
 
@@ -117,6 +114,9 @@ public:
 	}
 
 	wxString floating_humanizer(uint64_t value, const bool is_mega = false, const bool shorten = false, size_t start = 0, const bool bit = false, const bool per_second = false);
+
+	wxString sec_to_dhms(size_t seconds, bool no_days, bool no_seconds);
+
 private:
 	void SetWorkingDirectory();
 	void Init();

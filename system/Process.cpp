@@ -50,8 +50,10 @@ void CProcess::Init()
 	if(!m_wmi.IsInitialize())
 		m_wmi.Initialize();
 
-	//프로세스 CPU 시간 측정을 위한 Kernal시간 초기화
-//	InitKernalTime();
+	FILETIME st;
+	::GetSystemTimeAsFileTime(&st);
+
+	_systime = ULARGE_INTEGER{ st.dwLowDateTime, st.dwHighDateTime }.QuadPart;
 
 	IEnumWbemClassObject* pEnumerator = m_wmi.Collect();
 	if(pEnumerator)
@@ -143,6 +145,12 @@ CProcess* CProcess::AddProcess(IWbemClassObject* pObj)
 	VARIANT vtWriteTransferCount;
 	VariantInit(&vtWriteTransferCount);
 
+	VARIANT vtParentId;
+	VariantInit(&vtParentId);
+
+	VARIANT vtCreationDate;
+	VariantInit(&vtCreationDate);
+
 	if(pObj->Get(procQuery.ProcessID, 0, &vtProcessId, nullptr, nullptr) != S_OK)
 		return this;
 
@@ -154,11 +162,6 @@ CProcess* CProcess::AddProcess(IWbemClassObject* pObj)
 
 	pPSInfo->m_lRunCount = 0;
 	pPSInfo->m_dwLastRun = 0;
-
-	wxZeroMemory(pPSInfo->m_ftPrevSysKernel);
-    wxZeroMemory(pPSInfo->m_ftPrevSysUser);
-    wxZeroMemory(pPSInfo->m_ftPrevProcKernel);
-    wxZeroMemory(pPSInfo->m_ftPrevProcUser);
 
 	if(pObj->Get(procQuery.Name, 0, &vtProcessName, nullptr, nullptr) == S_OK)
 		pPSInfo->_strProcessName = wxString(vtProcessName.bstrVal);
@@ -188,10 +191,52 @@ CProcess* CProcess::AddProcess(IWbemClassObject* pObj)
 		pPSInfo->_strKernelModeTime = wxString(vtKernelModeTime.bstrVal);
 
 	if(pObj->Get(procQuery.ReadTransferCount, 0, &vtReadTransferCount, nullptr, nullptr) == S_OK)
-		pPSInfo->_readTransferCount = vtReadTransferCount.lVal;
+		pPSInfo->_readTransferCount = wxString(vtReadTransferCount.bstrVal);
 
 	if(pObj->Get(procQuery.WriteTransferCount, 0, &vtWriteTransferCount, nullptr, nullptr) == S_OK)
-		pPSInfo->_writeTransferCount = vtWriteTransferCount.llVal;
+		pPSInfo->_writeTransferCount = wxString(vtWriteTransferCount.bstrVal);
+
+	if(pObj->Get(procQuery.ParentProcessId, 0, &vtParentId, nullptr, nullptr) == S_OK)
+		pPSInfo->_ulParentProcId = vtParentId.uintVal;
+
+	if(pObj->Get(procQuery.CreationDate, 0, &vtCreationDate, nullptr, nullptr) == S_OK)
+			pPSInfo->_strCreationDate = wxString(vtCreationDate.bstrVal);
+
+	uint64_t cpu_t = 0;
+	FILETIME createT, exitT, kernelT, userT;
+	if (GetProcessTimes(pPSInfo->_hProcess, &createT, &exitT, &kernelT, &userT))
+	{
+		pPSInfo->cpu_s = ULARGE_INTEGER{ createT.dwLowDateTime, createT.dwHighDateTime }.QuadPart;
+		cpu_t = ULARGE_INTEGER{ kernelT.dwLowDateTime, kernelT.dwHighDateTime }.QuadPart + ULARGE_INTEGER{ userT.dwLowDateTime, userT.dwHighDateTime }.QuadPart;
+	}
+
+	if(cpu_t == 0 || pPSInfo->cpu_s == 0)
+	{
+		cpu_t = _wtoi64(pPSInfo->_strKernelModeTime) + _wtoi64(pPSInfo->_strUserModeTime);
+		if (pPSInfo->_strCreationDate.size() > 18)
+		{
+			SYSTEMTIME t = { 0 };
+			t.wYear         = std::stoi(pPSInfo->_strCreationDate.substr(0, 4).ToStdString());
+			t.wMonth        = std::stoi(pPSInfo->_strCreationDate.substr(4, 2).ToStdString());
+			t.wDay          = std::stoi(pPSInfo->_strCreationDate.substr(6, 2).ToStdString());
+			t.wHour         = std::stoi(pPSInfo->_strCreationDate.substr(8, 2).ToStdString());
+			t.wMinute       = std::stoi(pPSInfo->_strCreationDate.substr(10, 2).ToStdString());
+			t.wSecond       = std::stoi(pPSInfo->_strCreationDate.substr(12, 2).ToStdString());
+			t.wMilliseconds = std::stoi(pPSInfo->_strCreationDate.substr(15, 3).ToStdString());
+			ULARGE_INTEGER ft;
+			if (SystemTimeToFileTime(&t, (LPFILETIME)&ft))
+				pPSInfo->cpu_s = ft.QuadPart;
+		}
+	}
+
+	if(cpu_t != 0)
+		pPSInfo->cpu_t = cpu_t;
+
+	DWORD dwExitCode;
+	GetExitCodeProcess(pPSInfo->_hProcess, &dwExitCode);
+
+	if(dwExitCode == STILL_ACTIVE)
+		pPSInfo->_strStatus = wxT("Running");
 
 	SetUserNameAndDomainNameFromSid(pPSInfo);
 	theImageList->GetIconIndex(pPSInfo->_strProcessFullPath, pPSInfo->iIconIndex, pPSInfo->iOvelayIndex);
@@ -215,6 +260,10 @@ CProcess* CProcess::AddProcess(IWbemClassObject* pObj)
 	VariantClear(&vtKernelModeTime);
 	VariantClear(&vtReadTransferCount);
 	VariantClear(&vtWriteTransferCount);
+	VariantClear(&vtParentId);
+	VariantClear(&vtCreationDate);
+
+	GetParentProcessInfo(pPSInfo);
 
 	InitProcessCPUTime(pPSInfo);
 
@@ -232,6 +281,10 @@ CProcess* CProcess::AddProcess(IWbemClassObject* pObj)
 
 bool CProcess::SetPrivilige(LPCTSTR lpszPrivilege, bool bEnablePrivilege)
 {
+	bool bImpersonate = ImpersonateSelf(SecurityImpersonation);
+	if(!bImpersonate)
+		return false;
+
 	HANDLE hToken = 0;
 	if (!OpenProcessToken(GetCurrentProcess(),
 						  TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
@@ -391,47 +444,11 @@ void CProcess::GetUserNameFromToken(Proc::PROCESS_INFO* pInfo)
 //Process CPU
 void CProcess::InitProcessCPUTime(Proc::PROCESS_INFO* _pPsInfo)
 {
-//	//cpu 사용시간
-//	FILETIME ftime, fsys, fuser;
-//	//System시간을 읽어옴
-//	GetSystemTimeAsFileTime(&ftime);
-//	memcpy(&_pPsInfo->_lastCPU, &ftime, sizeof(FILETIME));
-//
-//	//오픈한 프로세스에 대한 사용시간 읽어옴
-//	GetProcessTimes(_pPsInfo->_hProcess, &ftime, &ftime, &fsys, &fuser);
-//
-//	memcpy(&_pPsInfo->_lastSysCPU, &fsys, sizeof(FILETIME));
-//	memcpy(&_pPsInfo->_lastUserCPU, &fuser, sizeof(FILETIME));
-//
-//	_pPsInfo->fCPUUsage = 0.0f;
-
 	_pPsInfo->fCPUUsage = GetProcessCPUUsage(_pPsInfo);
 }
 
 void CProcess::UpdateProcessCPUTime(Proc::PROCESS_INFO* _pPsInfo)
 {
-//	FILETIME ftime, fsys, fuser;
-//	FILETIME ftNow;
-//
-//	GetSystemTimeAsFileTime(&ftime);
-//	memcpy(&ftNow, &ftime, sizeof(FILETIME));
-//
-//	GetProcessTimes(_pPsInfo->_hProcess, &ftime, &ftime, &fsys, &fuser);
-//
-//	ULONGLONG ullSysDiff = theSystem->CPU()->SubtractTimes(fsys, _pPsInfo->_ftLastSysCPU);
-//	ULONGLONG ullUsrDiff = theSystem->CPU()->SubtractTimes(fuser, _pPsInfo->_ftLastUserCPU);
-//	ULONGLONG ullNowDiff = theSystem->CPU()->SubtractTimes(ftNow, _pPsInfo->_ftLastCPU);
-//	ULONGLONG ullTotal   = ullSysDiff + ullUsrDiff;
-//
-//	float fPercent = float( ullTotal ) / float( ullNowDiff );
-//	fPercent /= numProcessors;
-//	fPercent *= 100.0f;
-//
-//	_pPsInfo->_ftLastCPU     = ftNow;
-//	_pPsInfo->_ftLastUserCPU = fuser;
-//	_pPsInfo->_ftLastSysCPU  = fsys;
-//	_pPsInfo->fCPUUsage      = fPercent;
-
 	_pPsInfo->fCPUUsage = GetProcessCPUUsage(_pPsInfo);
 }
 
@@ -457,11 +474,11 @@ float CProcess::GetProcessCPUUsage(Proc::PROCESS_INFO* _pPsInfo)
 
         if (!_pPsInfo->IsFirstRun())
 		{
-			ULONGLONG ftSysKernelDiff = theSystem->CPU()->SubtractTimes(ftSysKernel, _pPsInfo->m_ftPrevSysKernel);
-            ULONGLONG ftSysUserDiff = theSystem->CPU()->SubtractTimes(ftSysUser, _pPsInfo->m_ftPrevSysUser);
+			ULONGLONG ftSysKernelDiff = theSystem->CPU()->SubtractTimes(ftSysKernel, _pPsInfo->cpuTimes._ftSysKernel);
+            ULONGLONG ftSysUserDiff = theSystem->CPU()->SubtractTimes(ftSysUser, _pPsInfo->cpuTimes._ftSysUser);
 
-            ULONGLONG ftProcKernelDiff = theSystem->CPU()->SubtractTimes(ftProcKernel, _pPsInfo->m_ftPrevProcKernel);
-            ULONGLONG ftProcUserDiff = theSystem->CPU()->SubtractTimes(ftProcUser, _pPsInfo->m_ftPrevProcUser);
+            ULONGLONG ftProcKernelDiff = theSystem->CPU()->SubtractTimes(ftProcKernel, _pPsInfo->cpuTimes._ftProcKernel);
+            ULONGLONG ftProcUserDiff = theSystem->CPU()->SubtractTimes(ftProcUser, _pPsInfo->cpuTimes._ftProcUser);
 
             ULONGLONG nTotalSys =  ftSysKernelDiff + ftSysUserDiff;
             ULONGLONG nTotalProc = ftProcKernelDiff + ftProcUserDiff;
@@ -470,16 +487,25 @@ float CProcess::GetProcessCPUUsage(Proc::PROCESS_INFO* _pPsInfo)
                 fCpuUsage = (float)((100.0f * nTotalProc) / nTotalSys);
 		}
 
-		_pPsInfo->m_ftPrevSysKernel = ftSysKernel;
-        _pPsInfo->m_ftPrevSysUser = ftSysUser;
-        _pPsInfo->m_ftPrevProcKernel = ftProcKernel;
-        _pPsInfo->m_ftPrevProcUser = ftProcUser;
+		_pPsInfo->cpuTimes._ftSysKernel  = ftSysKernel;
+        _pPsInfo->cpuTimes._ftSysUser    = ftSysUser;
+        _pPsInfo->cpuTimes._ftProcKernel = ftProcKernel;
+        _pPsInfo->cpuTimes._ftProcUser   = ftProcUser;
 
         _pPsInfo->m_dwLastRun = GetTickCount64();
 	}
 
 	::InterlockedDecrement(&_pPsInfo->m_lRunCount);
 	return fCpuUsage;
+}
+
+void CProcess::UpdateElapsedTime(Proc::PROCESS_INFO* _pPsInfo)
+{
+	FILETIME st;
+	::GetSystemTimeAsFileTime(&st);
+	const uint64_t systime = ULARGE_INTEGER{ st.dwLowDateTime, st.dwHighDateTime }.QuadPart;
+
+	_pPsInfo->_strElapsedTime = theUtility->sec_to_dhms((systime - _pPsInfo->cpu_s) / 10'000'000, false, false);
 }
 
 //Process Memory
@@ -494,6 +520,39 @@ void CProcess::UpdateProcessMemory(Proc::PROCESS_INFO* _pPsInfo)
 		_pPsInfo->_PrivateSize = pmc.PrivateUsage;
 		_pPsInfo->_WorkingSetSize = pmc.WorkingSetSize;
 	}
+#else
+
+#endif
+}
+
+void CProcess::GetParentProcessInfo(Proc::PROCESS_INFO* _pPsInfo)
+{
+#ifdef __WXMSW__
+	IEnumWbemClassObject* pEnumerator = m_wmi.Collect(_pPsInfo->_ulParentProcId);
+	if(pEnumerator)
+	{
+		ULONG uReturn = 0;
+		IWbemClassObject* pclsObj = nullptr;
+
+		while(pEnumerator)
+		{
+			pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
+			if(0 == uReturn)
+				break;
+
+			VARIANT vtParentProcessName;
+			VariantInit(&vtParentProcessName);
+
+			if(pclsObj->Get(procQuery.Name, 0, &vtParentProcessName, nullptr, nullptr) == S_OK)
+				_pPsInfo->_strParentProcessName = wxString(vtParentProcessName.bstrVal);
+
+			VariantClear(&vtParentProcessName);
+
+			pclsObj->Release();
+		}
+	}
+
+
 #else
 
 #endif
@@ -517,11 +576,14 @@ void CProcess::UpdateIOReadWrite(Proc::PROCESS_INFO* _pPsInfo)
 			VARIANT vtReadTransferCount;
 			VARIANT vtWriteTransferCount;
 
+			VariantInit(&vtReadTransferCount);
+			VariantInit(&vtWriteTransferCount);
+
 			if(pclsObj->Get(procQuery.ReadTransferCount, 0, &vtReadTransferCount, nullptr, nullptr) == S_OK)
-				_pPsInfo->_readTransferCount = vtReadTransferCount.lVal;
+				_pPsInfo->_readTransferCount = wxString(vtReadTransferCount.bstrVal);
 
 			if(pclsObj->Get(procQuery.WriteTransferCount, 0, &vtWriteTransferCount, nullptr, nullptr) == S_OK)
-				_pPsInfo->_writeTransferCount =vtWriteTransferCount.llVal;
+				_pPsInfo->_writeTransferCount = wxString(vtWriteTransferCount.bstrVal);
 
 			VariantClear(&vtReadTransferCount);
 			VariantClear(&vtWriteTransferCount);
@@ -529,8 +591,6 @@ void CProcess::UpdateIOReadWrite(Proc::PROCESS_INFO* _pPsInfo)
 			pclsObj->Release();
 		}
 	}
-
-
 #else
 
 #endif
@@ -546,7 +606,6 @@ Proc::PROCESS_INFO* CProcess::UpdateProcessInfo(unsigned long _ulProcessId)
 
 	UpdateProcessCPUTime(pProcessInfo);
 	UpdateProcessMemory(pProcessInfo);
-//	UpdateIOReadWrite(pProcessInfo);
 
 	return pProcessInfo;
 }
