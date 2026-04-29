@@ -190,7 +190,7 @@ DlgFind::~DlgFind()
 
 void DlgFind::OnInitDialog(wxInitDialogEvent& event)
 {
-	m_txtSourcePath->SetLabelText(m_strPath);
+	m_txtSourcePath->SetValue(m_strPath);
 	m_radioStart->SetValue(true);
 	m_btnCancel->Enable(false);
 	m_staticTextPathInfo->SetLabelText(wxT(""));
@@ -240,7 +240,7 @@ void DlgFind::ProcessKeyEvent(int iKeyCode)
 	}
 }
 
-void DlgFind::setSearchDir(wxString const& strPath)
+void DlgFind::SetSearchDir(wxString const& strPath)
 {
 	m_strPath = strPath;
 }

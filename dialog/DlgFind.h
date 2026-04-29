@@ -50,7 +50,7 @@ public:
 	virtual void OnLBoxDbClick(wxCommandEvent& event);
 
 public:
-	void setSearchDir(wxString const& strPath);
+	void SetSearchDir(wxString const& strPath);
 
 private:
 	void SearchDirectory(const wxString& strPath);

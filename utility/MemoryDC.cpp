@@ -51,14 +51,18 @@ wxMemoryDC* CMemoryDC::CreateMemoryDC(wxDC* pDC, const wxRect& rc, const wxColou
 
 wxMemoryDC* CMemoryDC::CreateRoundRectMemoryDC(wxDC* pDC, const wxRect& rc, double dblradius, const wxColour& colPen, const wxColour& colBrush)
 {
+	m_rc = rc;
 	CreateMemoryBuffer(pDC);
 
 	DetachDC();
 
-	m_pMemDC->SelectObject(*m_pDoubleBuffer);
-    m_pMemDC->SetPen(colPen);
-	m_pMemDC->SetBrush(colBrush);
-	m_pMemDC->DrawRoundedRectangle(rc, dblradius);
+	if(m_pDoubleBuffer)
+	{
+		m_pMemDC->SelectObject(*m_pDoubleBuffer);
+		m_pMemDC->SetPen(colPen);
+		m_pMemDC->SetBrush(colBrush);
+		m_pMemDC->DrawRoundedRectangle(rc, dblradius);
+	}
 
 	return m_pMemDC.get();
 }
@@ -89,16 +93,27 @@ unsigned int CMemoryDC::GetHeight()
 
 void CMemoryDC::ChangeViewSize(const wxSize& sz)
 {
-	if ((sz.x == 0) || (sz.y == 0))
+	wxSize szTmp(sz);
+	int width = szTmp.GetWidth();
+	int height = szTmp.GetHeight();
+
+	if ((width == 0) && (height == 0))
 		return;
 
-	if (m_szChagned.x != sz.x)
+	int oldWidth = m_szChagned.GetWidth();
+	int oldHeight = m_szChagned.GetHeight();
+
+//	if (m_szChagned.x != sz.x)
+	if ((oldWidth != width) || (oldHeight != height))
 	{
-		m_szChagned = sz;
+		m_szChagned = szTmp;
 		if (m_pDoubleBuffer)
 			delete m_pDoubleBuffer;
 
-		m_pDoubleBuffer = new wxBitmap(m_szChagned.x, m_szChagned.y);
+		int newWidth = width == 0 ? 10 : width;
+		int newHeight = height == 0 ? 10 : height;
+
+		m_pDoubleBuffer = new wxBitmap(newWidth, newHeight);
 	}
 }
 

@@ -148,7 +148,8 @@ void CNextMExecuteMenuOperation::FileMenu_Execution()
 void CNextMExecuteMenuOperation::FileMenu_NewTab()
 {
 	CNextMViewManager* pCurrentViewManager = theSplitterManager->GetCurrentViewManager();
-	pCurrentViewManager->AddTabPage();
+	if(pCurrentViewManager != nullptr)
+		pCurrentViewManager->AddTabPage();
 }
 
 void CNextMExecuteMenuOperation::FileMenu_Copy()
@@ -494,7 +495,7 @@ void CNextMExecuteMenuOperation::EditMenu_FileFind()
 	wxString strPath = pFileListView->GetCurrentPath();
 
 	DlgFind findDlg(_gMainFrame);
-	findDlg.setSearchDir(strPath);
+	findDlg.SetSearchDir(strPath);
 	findDlg.ShowModal();
 	findDlg.Destroy();
 }

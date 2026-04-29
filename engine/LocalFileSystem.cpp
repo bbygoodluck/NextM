@@ -44,7 +44,7 @@ bool CLocalFileSystem::BeginFindFiles(wxString path, bool dirs_only)
 		m_strFind_path += wxT("*");
 	}
 
-	m_hFind = FindFirstFileEx(m_strFind_path, FindExInfoStandard, &m_find_data, dirs_only ? FindExSearchLimitToDirectories : FindExSearchNameMatch, NULL, 0);
+	m_hFind = FindFirstFileEx(m_strFind_path, FindExInfoStandard /*FindExInfoBasic */, &m_find_data, dirs_only ? FindExSearchLimitToDirectories : FindExSearchNameMatch, NULL, 0);//FIND_FIRST_EX_LARGE_FETCH);
 	if (m_hFind == INVALID_HANDLE_VALUE)
 	{
 		m_bfound = false;
