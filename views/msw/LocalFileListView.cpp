@@ -629,7 +629,10 @@ void CLocalFileListView::DoRename(CWatcherItem* pItem)
 
 	std::vector<CNextMDirData>::iterator it = FindItem(strOldName);
 	if(it == m_itemList.end())
+	{
+		DoCreate(pItem);
 		return;
+	}
 
 	it->SetName(strNewName);
 
