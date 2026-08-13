@@ -397,46 +397,21 @@ wxString CUtility::GetFileDescription(const wxString& strExt, const wxString& st
 
 void CUtility::GetSizeInfo(const double dblFileSize, wxString& strFileSize, wxString& strFileSizeType, wxColour& dispColor)
 {
-	double dblSize = 0.0;
-	dispColor = theColor->GetDefaultColor();//wxColour(192, 192, 192);
+    const char* units[] = {"", "KB", "MB", "GB", "TB"};
+    const wxColour colors[] = {theColor->GetDefaultColor(), theColor->GetDefaultColor(), *wxRED, *wxGREEN, *wxBLUE};
+    const char* formats[] = {"%3.0f", "%3.2f", "%3.2f", "%3.2f", "%3.2f"};
 
-	strFileSizeType.clear();
+	double dblSize = dblFileSize;
+	int index = 0;
+	while(dblSize >= KILOBYTE && index < 4)
+    {
+        dblSize /= KILOBYTE;
+        index++;
+    }
 
-	if (dblFileSize < KILOBYTE)
-		strFileSize = wxString::Format(wxT("%3.0f"), dblFileSize);
-
-	if (dblFileSize >= KILOBYTE)
-	{
-		dblSize = dblFileSize / KILOBYTE;
-		strFileSizeType = _T("KB");
-	}
-
-	if (dblFileSize >= MEGABYTE)
-	{
-		dblSize = dblFileSize / MEGABYTE;
-		strFileSizeType = _T("MB");
-
-		dispColor = *wxRED;
-	}
-
-	if (dblFileSize >= GIGABYTE)
-	{
-		dblSize = dblFileSize / GIGABYTE;
-		strFileSizeType = _T("GB");
-
-		dispColor = *wxGREEN;
-	}
-
-	if (dblFileSize >= TERABYTE)
-	{
-		dblSize = dblFileSize / TERABYTE;
-		strFileSizeType = _T("TB");
-
-		dispColor = *wxBLUE;
-	}
-
-	if (strFileSizeType.Cmp(wxT("")) != 0)
-		strFileSize = wxString::Format(wxT("%3.2f"), dblSize);
+    dispColor = colors[index];
+    strFileSizeType = units[index];
+    strFileSize = wxString::Format(formats[index], dblSize);
 }
 
 void CUtility::LaunchAndExec(const wxString& strExecProgram, const wxString& strPath)
