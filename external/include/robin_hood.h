@@ -1,3 +1,6 @@
+#ifndef HEADER_27D7F92CB52320F0
+#define HEADER_27D7F92CB52320F0
+
 //                 ______  _____                 ______                _________
 //  ______________ ___  /_ ___(_)_______         ___  /_ ______ ______ ______  /
 //  __  ___/_  __ \__  __ \__  / __  __ \        __  __ \_  __ \_  __ \_  __  /
@@ -38,6 +41,7 @@
 #define ROBIN_HOOD_VERSION_MINOR 11 // for adding functionality in a backwards-compatible manner
 #define ROBIN_HOOD_VERSION_PATCH 5  // for backwards-compatible bug fixes
 
+#include <cstdint>
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -2542,3 +2546,5 @@ using unordered_set = detail::Table<sizeof(Key) <= sizeof(size_t) * 6 &&
 } // namespace robin_hood
 
 #endif
+#endif // header guard 
+

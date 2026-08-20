@@ -168,7 +168,7 @@ DlgFavoriteManager::~DlgFavoriteManager()
 
 void DlgFavoriteManager::OnInitDialog(wxInitDialogEvent& event)
 {
-	m_txtPath->SetLabelText(m_strAddPath);
+	m_txtPath->SetValue(m_strAddPath);
 
 	CreateTreeImages(16);
 	wxTreeItemId rootId = m_treeFavorite->AddRoot(theMsg->GetMessage(wxT("MSG_TOOLBAR_FAVORITE")));
@@ -244,7 +244,7 @@ void DlgFavoriteManager::OnCmbItemSelected(wxCommandEvent& event)
 	int iSel = m_cmbType->GetSelection();
 	if (iSel == 1)
 	{
-		m_txtPath->SetLabelText(wxT(""));
+		m_txtPath->SetValue(wxT(""));//SetLabelText(wxT(""));
 		m_txtPath->Enable(false);
 	}
 }
@@ -257,7 +257,7 @@ void DlgFavoriteManager::OnDirSelectClick(wxCommandEvent& event)
 	if(dlgFavorite.ShowModal() == wxID_OK)
 	{
 		wxString strPath = dlgFavorite.GetPath();
-		m_txtPath->SetLabelText(strPath);
+		m_txtPath->SetValue(strPath);//SetLabelText(strPath);
 	}
 }
 
@@ -307,9 +307,9 @@ void DlgFavoriteManager::OnAddClick(wxCommandEvent& event)
 
 	m_bChanged = true;
 
-	m_txtFavoriteName->SetLabelText(wxT(""));
+	m_txtFavoriteName->SetValue(wxT(""));//SetLabelText(wxT(""));
 	m_cmbType->SetSelection(0);
-	m_txtPath->SetLabelText(wxT(""));
+	m_txtPath->SetValue(wxT(""));//SetLabelText(wxT(""));
 }
 
 void DlgFavoriteManager::OnDelClick(wxCommandEvent& event)
@@ -416,8 +416,8 @@ void DlgFavoriteManager::OnTreeItemChanged(wxTreeEvent& event)
 
 	if (m_rootItem == treeItemId)
 	{
-		m_txtFavoriteName->SetLabelText(wxT(""));
-		m_txtPath->SetLabelText(wxT(""));
+		m_txtFavoriteName->SetValue(wxT(""));//SetLabelText(wxT(""));
+		m_txtPath->SetValue(wxT(""));//SetLabelText(wxT(""));
 		m_cmbType->SetSelection(0);
 		return;
 	}
@@ -428,8 +428,8 @@ void DlgFavoriteManager::OnTreeItemChanged(wxTreeEvent& event)
 		m_strType = pTreeItem->_strType;
 		m_strPath = pTreeItem->_strPath;
 
-		m_txtFavoriteName->SetLabelText(m_strName);
-		m_txtPath->SetLabelText(m_strPath);
+		m_txtFavoriteName->SetValue(m_strName);//SetLabelText(m_strName);
+		m_txtPath->SetValue(m_strPath);//SetLabelText(m_strPath);
 
 		int iSelIndex = m_strType.Cmp("item") == 0 ? 0 : 1;
 		m_cmbType->SetSelection(iSelIndex);

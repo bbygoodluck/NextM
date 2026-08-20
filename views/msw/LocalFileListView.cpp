@@ -408,7 +408,9 @@ void CLocalFileListView::DoCreate(CWatcherItem* pItem)
 
 		if(!bIconSet)
 		{
-			strDesc = theUtility->GetFileDescription(strExt,  strFullPath);
+		    if(!isDir)
+                strDesc = theUtility->GetFileDescription(strExt,  strFullPath);
+
 			theImageList->GetIconIndex(strFullPath, iIconIndex, iOverlayIconIndex);
 		}
 
