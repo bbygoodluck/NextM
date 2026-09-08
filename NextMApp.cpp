@@ -122,7 +122,7 @@ bool CNextMApp::Initialize()
 
 	//이미지리스트
 	theImageList->LoadImageList();
-	theImageList->Attach(_gImageList);
+    _gImageList = theImageList->GetImageList();
 
 	_strCurrentPath = theUtility->GetWorkDir();
 

@@ -17,8 +17,10 @@ public:
 
 #ifdef __WXMSW__
 	void Attach(HIMAGELIST hImageList);
+	HIMAGELIST GetImageList() { return m_hImageList; }
 #else
 	void Attach(wxImageList* pImageList);
+	wxImageList* GetImageList() { return m_pImageList; }
 #endif
 
 private:

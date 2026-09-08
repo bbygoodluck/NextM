@@ -14,6 +14,7 @@ CDriveInfo* CDriveInfo::Get()
 
 void CDriveInfo::Init()
 {
+	m_bIsMaxDriveName = false;
 	m_vecDriveList.clear();
 	m_vecDriveList.reserve(100);
 
@@ -128,4 +129,22 @@ void CDriveInfo::UpdateDriveSpace(const wxString& strVolume)
 			break;
 		}
 	}
+}
+
+void CDriveInfo::SetMaxDriveName(wxWindow* pWindow, wxFont& font)
+{
+	std::vector<CNextMDirData>::iterator drvItemBegin = BeginIter();
+
+	int index = 0;
+	while(drvItemBegin != EndIter())
+	{
+		wxString strName = drvItemBegin->GetName();
+
+		m_strMaxDisp = theUtility->GetMaxData(pWindow, font, strName, m_strMaxDisp);
+		index++;
+
+		drvItemBegin = BeginIter() + index;
+	}
+
+	m_bIsMaxDriveName = true;
 }

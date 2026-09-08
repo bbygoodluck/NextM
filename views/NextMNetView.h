@@ -266,7 +266,7 @@ public:
 		_speedindex = GetUnitIndex(data.speed, false, false, 0, false);
 		_str_speed = theUtility->floating_humanizer(data.speed, false, false, 0, false, true);
 
-		m_fSpeed = 6.0f + speedVals[_speedindex];
+		m_fSpeed = 6.0f;// + speedVals[_speedindex];
 		m_fWidth = 2.0f + (float)widthVals[_speedindex];
 	}
 

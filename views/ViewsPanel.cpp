@@ -39,11 +39,10 @@ void CViewsPanel::CreatePanelItems(bool bRemote)
 
 	//파일 리스트뷰 생성
 	if(!bRemote)
-		m_pFileListView = new CLocalFileListView(this, wxFILFELIST_VIEWID++, wxDefaultSize);
+    	m_pFileListView = new CLocalFileListView(this, wxFILFELIST_VIEWID++, wxDefaultSize);
 
 	pMainsizer->Add(m_pPathView, 0, wxEXPAND, 0);
 	pMainsizer->Add( m_pFileListView, 1, wxEXPAND, 0);
-
 
 	SetSizer(pMainsizer);
 	this->Layout();

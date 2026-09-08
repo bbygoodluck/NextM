@@ -17,6 +17,10 @@
 	#include "../interface/msw/NextMDropTarget.h"
 #else
 #endif
+
+#include <queue>
+#include <thread>
+#include <mutex>
 struct _HistoryItem
 {
 	int iCurrentIndex;
@@ -110,10 +114,10 @@ public:
 	void SetDnDUpdate();
 
 protected:
-	virtual void Render(wxDC* pDC) = 0;
-	virtual void ApplyChangedViewSize() = 0;
 	virtual void GotoTopDir() = 0;
 
+    void Render(wxDC* pDC);
+    void ApplyChangedViewSize();
 	void Initialize();
 	void SortStart();
 	void Clear();
@@ -371,6 +375,9 @@ protected:
 #ifdef __WXMSW__
 	std::unique_ptr<CNextMDropTarget> m_pDropTarget;
 #endif // __WXMSW__
+
+    std::queue<size_t> m_taskQueue;       // 아이콘 작업을 위해 인덱스를 담는 큐
+
 protected:
 	//Default Event
     void OnCharHook(wxKeyEvent& event);

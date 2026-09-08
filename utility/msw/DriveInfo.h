@@ -25,6 +25,9 @@ public:
 	int GetDiskDriveCount() { return m_vecDriveList.size(); }
 
 	wxString GetMaxDriveDisp() { return m_strMaxDisp; }
+
+	void SetMaxDriveName(wxWindow* pWindow, wxFont& font);
+	bool IsSetMaxDriveName() { return m_bIsMaxDriveName; }
 private:
 	wxString MakeDisplayName(const wxString& strVolume, const wxString& strVolumeDisplayName, bool IsNetDrive);
 
@@ -33,6 +36,7 @@ private:
 	std::vector<CNextMDirData> m_vecDriveList;
 
 	wxString m_strMaxDisp = wxT("");
+	bool m_bIsMaxDriveName = false;
 	int m_nDriveCount = 0;
 };
 

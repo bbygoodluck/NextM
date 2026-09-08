@@ -117,6 +117,8 @@ bool CLocalFileListView::LoadDirectory(const wxString& strPath)
 			dirItem.SetType(CNextMDirData::item_type::dir);
 			m_iDirCount++;
 			strDesc = theMsg->GetMessage(wxT("MSG_DIR_DESCRIPTION"));
+			//디렉토리 아이콘은 Default 아이콘을 설정
+			dirItem.SetIconIndex(3, -1);
 		}
 		else
 		{
@@ -146,8 +148,6 @@ bool CLocalFileListView::LoadDirectory(const wxString& strPath)
 		dirItem.SetExt(strExt);
 		dirItem.SetDescription(strDesc);
 
-//		m_itemList.push_back(dirItem);
-
 		m_strMaxName = theUtility->GetMaxData(this, m_viewFont, strName, m_strMaxName);
 		m_strMaxTypeName = theUtility->GetMaxData(this, m_viewFont, strDesc, m_strMaxTypeName);
 
@@ -159,6 +159,8 @@ bool CLocalFileListView::LoadDirectory(const wxString& strPath)
 		lattr = 0;
 		llSize = 0;
 		dt = 0;
+
+		m_taskQueue.push(m_itemList.size() - 1);
 	}
 
 	localFileSys.EndFindFiles();
@@ -172,15 +174,14 @@ bool CLocalFileListView::LoadDirectory(const wxString& strPath)
 
 	m_iTotalItems = m_itemList.size();
 
-	//파일(폴더) 이미지 읽기
+    m_bDirLoaded = true;
+    theDCUtil->Refresh(this, m_viewRect);
+
+    //파일(폴더) 이미지 읽기
 	RunFileImageInfoRead();
 
 	//디렉토리 감시 시작
 	m_pFileSystemWatcher->StartWatch(strPath);
-
-	m_bDirLoaded = true;
-	theDCUtil->Refresh(this, m_viewRect);
-
 	return true;
 }
 
@@ -188,6 +189,8 @@ void CLocalFileListView::InsertDiskDriveItems()
 {
 	//드라이브정보 복사
 	std::copy(theDriveInfo->BeginIter(), theDriveInfo->EndIter(), std::back_inserter(m_itemList));
+	if(!theDriveInfo->IsSetMaxDriveName())
+		theDriveInfo->SetMaxDriveName(this, m_viewFont);
 }
 
 void CLocalFileListView::DeleteDiskDriveItems()
@@ -217,43 +220,27 @@ void CLocalFileListView::ResetDiskDriveItems()
 	theDCUtil->Refresh(this, m_viewRect);
 }
 
-void CLocalFileListView::Render(wxDC* pDC)
-{
-	if(m_bSizeOrColumnChanged)
-        ApplyChangedViewSize();
-
-	// 컬럼계산
-	CalcColumn(pDC);
-	// 컬럼그리기
-	DrawColumn(pDC);
-	//정보표시창
-	DrawInfoArea(pDC);
-	//디렉토리 정보표시
-	DisplayDirInfo(pDC);
-	//데이터 표시
-	DisplayItems(pDC);
-
-	m_bSizeOrColumnChanged = false;
-    m_bDirLoaded = false;
-}
-
-void CLocalFileListView::ApplyChangedViewSize()
-{
-	m_viewDirInfo.SetLeft(m_viewRect.GetLeft());
-	m_viewDirInfo.SetTop(m_viewRect.GetTop() - 1);
-	m_viewDirInfo.SetRight(m_viewRect.GetRight());
-	m_viewDirInfo.SetBottom(m_viewRect.GetTop() + 20);
-
-	m_viewRectDetail.SetLeft(m_viewRect.GetLeft());
-	m_viewRectDetail.SetTop(m_viewRect.GetBottom() - 20);
-	m_viewRectDetail.SetRight(m_viewRect.GetRight());
-	m_viewRectDetail.SetBottom(m_viewRect.GetBottom());
-
-	m_viewRectDisp.SetLeft(m_viewRect.GetLeft());
-	m_viewRectDisp.SetTop(m_viewRect.GetTop() + 20);
-	m_viewRectDisp.SetRight(m_viewRect.GetRight());
-	m_viewRectDisp.SetBottom(m_viewRect.GetBottom() - 20);
-}
+//void CLocalFileListView::Render(wxDC* pDC)
+//{
+//	if(m_bSizeOrColumnChanged)
+//    {
+//        ApplyChangedViewSize();
+//        // 컬럼계산
+//        CalcColumn(pDC);
+//    }
+//
+//	// 컬럼그리기
+//	DrawColumn(pDC);
+//	//정보표시창
+//	DrawInfoArea(pDC);
+//	//디렉토리 정보표시
+//	DisplayDirInfo(pDC);
+//	//데이터 표시
+//	DisplayItems(pDC);
+//
+//	m_bSizeOrColumnChanged = false;
+//    m_bDirLoaded = false;
+//}
 
 void CLocalFileListView::GotoTopDir()
 {

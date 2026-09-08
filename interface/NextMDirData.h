@@ -145,18 +145,7 @@ public:
 		dblUseSpace = m_dblUseSpace;
 	}
 
-	wxString GetDriveSpace()
-	{
-		if( (m_fsvDriveKind == wxFS_VOL_CDROM) ||
-			(m_fsvDriveKind == wxFS_VOL_DVDROM) )
-				return wxT("");
-
-		wxString strTotalSpace = wxString::Format(wxT("%5.1f GB"), (m_dblTotalSpace / GIGABYTE));
-		wxString strFreeSpace = wxString::Format(wxT("%5.1f GB"), (m_dblUseSpace / GIGABYTE));
-
-		return (strFreeSpace + wxT(" / ") + strTotalSpace);
-	}
-
+	wxString GetDriveSpace();
 #endif
 
 	wxString GetPermission();

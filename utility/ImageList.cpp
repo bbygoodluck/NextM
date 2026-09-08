@@ -48,6 +48,7 @@ void CImageList::Attach(wxImageList* pImageList)
 void CImageList::LoadImageList()
 {
 #ifdef __WXMSW__
+/*
 	// IID_IImageList {46EB5926-582E-4017-9FDF-E8998DAA0950}
 	static const GUID IID_IImageList = { 0x46EB5926, 0x582E, 0x4017, { 0x9F, 0xDF, 0xE8, 0x99, 0x8D, 0xAA, 0x9, 0x50 } };
 	// IID_IImageList2 {192B9D83-50FC-457B-90A0-2B82A8B5DAE1}
@@ -57,26 +58,36 @@ void CImageList::LoadImageList()
 	HRESULT res = SHGetImageList(SHIL_SMALL, IID_IImageList2, (void**)& _gImageList);
 	if (FAILED(res))
 		res = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)& _gImageList);
+*/
+    SHFILEINFOW sfi = { 0 };
+    m_hImageList = (HIMAGELIST)SHGetFileInfo(L"C:\\", 0, &sfi, sizeof(sfi), SHGFI_SMALLICON | SHGFI_SYSICONINDEX);
 #else
-	_gImageList = wxTheFileIconsTable->GetSmallImageList();
+	m_pImageList = wxTheFileIconsTable->GetSmallImageList();
 #endif
 }
 
 void CImageList::GetIconIndex(const wxString& strPath, int &nIconIndex, int &nOverlayIndex, bool bExtFind)
 {
 #ifdef __WXMSW__
-	nIconIndex = 0;
+    nIconIndex = 0;
 	nOverlayIndex = 0;
 
 	DWORD dwNum = GetFileAttributes(strPath);
 	DWORD attr = 0;
 
-	attr = dwNum & FILE_ATTRIBUTE_DIRECTORY ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
+	attr = FILE_ATTRIBUTE_NORMAL;
+    UINT flag = IMAGELIST_FLAG;
+
+    if(dwNum != INVALID_FILE_ATTRIBUTES)
+    {
+        if(dwNum & FILE_ATTRIBUTE_DIRECTORY)
+            attr = FILE_ATTRIBUTE_DIRECTORY;
+        else
+            flag |= SHGFI_USEFILEATTRIBUTES;
+    }
 
 	SHFILEINFO sfi;
 	wxZeroMemory(sfi);
-
-	UINT flag = IMAGELIST_FLAG;
 
 	if(bExtFind)
 	{
@@ -84,9 +95,10 @@ void CImageList::GetIconIndex(const wxString& strPath, int &nIconIndex, int &nOv
 		flag |= SHGFI_USEFILEATTRIBUTES;
 	}
 
+	sfi.dwAttributes = dwNum;
 	SHGetFileInfo(strPath, attr, &sfi, sizeof(sfi), flag);
 
-	nIconIndex = (sfi.iIcon & 0x00FFFFFF);
+	nIconIndex = (sfi.iIcon & 0x00FFFF);
 	nOverlayIndex = (sfi.iIcon >> 24) - 1;
 
 	DestroyIcon(sfi.hIcon);
@@ -119,16 +131,12 @@ bool CImageList::Draw(int index, wxDC* pDC, int x, int y, int flags)
 	pDC->ReleaseHDC(hdc);
 	return bDraw;
 #else
-	if(!m_bSetHImageList)
+	if(!m_pImageList)
 	{
-		if(!m_pImageList)
-		{
-			wxMessageBox(wxT("wxImageList is null"), PROGRAM_FULL_NAME, wxOK | wxICON_ERROR);
-			return false;
-		}
-
-		return m_pImageList->Draw(index, *pDC, x, y, flags);
+		wxMessageBox(wxT("wxImageList is null"), PROGRAM_FULL_NAME, wxOK | wxICON_ERROR);
+		return false;
 	}
 
+	return m_pImageList->Draw(index, *pDC, x, y, flags);
 #endif // __WXMSW__
 }

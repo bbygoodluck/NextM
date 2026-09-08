@@ -155,7 +155,7 @@ void CFileListView::Initialize()
 
 	//화면 변경 플래그
 	//최초수행시는 true 로 설정
-	m_bSizeOrColumnChanged = true;
+//	m_bSizeOrColumnChanged = true;
 
 	//디렉토리 Load 플래그
 	m_bDirLoaded = false;
@@ -224,14 +224,14 @@ void CFileListView::OnErase(wxEraseEvent& event)
 void CFileListView::OnCharHook(wxKeyEvent& event)
 {
 	int iKeyCode = event.GetKeyCode();
-/*
-	if(m_bRename || (!m_strKeyInput.IsEmpty() && iKeyCode == 46))
+
+	if(m_bRename)// || (!m_strKeyInput.IsEmpty() && iKeyCode == 46))
 	{
 		event.Skip();
-		wxPostEvent(m_pTxtCtrlForRename.get(), event);
+//		wxPostEvent(m_pTxtCtrlForRename.get(), event);
 		return;
 	}
-*/
+
 	bool bControlDown = wxIsCtrlDown();
 	bool bAltDown     = wxIsAltDown();
 	bool bShiftDown   = wxIsShiftDown();
@@ -851,6 +851,45 @@ void CFileListView::OnPaint(wxPaintEvent& event)
 	dc.Blit(0, 0, m_viewRect.GetWidth(), m_viewRect.GetHeight(), pMemDC, 0, 0);
 }
 
+void CFileListView::Render(wxDC* pDC)
+{
+	if(m_bSizeOrColumnChanged)
+        ApplyChangedViewSize();
+
+    // 컬럼계산
+    CalcColumn(pDC);
+	// 컬럼그리기
+	DrawColumn(pDC);
+	//정보표시창
+	DrawInfoArea(pDC);
+	//디렉토리 정보표시
+	DisplayDirInfo(pDC);
+	//데이터 표시
+	DisplayItems(pDC);
+
+	m_bSizeOrColumnChanged = false;
+    m_bDirLoaded = false;
+}
+
+void CFileListView::ApplyChangedViewSize()
+{
+	m_viewDirInfo.SetLeft(m_viewRect.GetLeft());
+	m_viewDirInfo.SetTop(m_viewRect.GetTop() - 1);
+	m_viewDirInfo.SetRight(m_viewRect.GetRight());
+	m_viewDirInfo.SetBottom(m_viewRect.GetTop() + 20);
+
+	m_viewRectDetail.SetLeft(m_viewRect.GetLeft());
+	m_viewRectDetail.SetTop(m_viewRect.GetBottom() - 20);
+	m_viewRectDetail.SetRight(m_viewRect.GetRight());
+	m_viewRectDetail.SetBottom(m_viewRect.GetBottom());
+
+	m_viewRectDisp.SetLeft(m_viewRect.GetLeft());
+	m_viewRectDisp.SetTop(m_viewRect.GetTop() + 20);
+	m_viewRectDisp.SetRight(m_viewRect.GetRight());
+	m_viewRectDisp.SetBottom(m_viewRect.GetBottom() - 20);
+}
+
+
 void CFileListView::OnSize(wxSizeEvent& event)
 {
 	wxSize size = event.GetSize();
@@ -1036,9 +1075,6 @@ bool CFileListView::FindItemInMousePoint(const wxPoint& pt, bool IsMouseMove)
 
 void CFileListView::CalcColumn(wxDC* pDC)
 {
-	if (m_iTotalItems <= 0)
-		return;
-
 	if(!m_bSizeOrColumnChanged && !m_bDirLoaded)
 		return;
 
@@ -1100,7 +1136,7 @@ void CFileListView::CalcColumn(wxDC* pDC)
 	}
 
 	//아이템 표시좌표 계산
-	CalcPosition(pDC);
+    CalcPosition(pDC);
 }
 
 bool CFileListView::CalcAutoColumn(wxDC* pDC, const wxRect& viewRect)
@@ -1410,9 +1446,9 @@ void CFileListView::DisplayItems(wxDC* pDC)
 		//표시 색상
 		if (isDrive)
 		{
-			if(Iter->GetDriveType() == wxFS_VOL_DISK)
-				strName = strName + wxT("   ") + Iter->GetDriveSpace();
-
+//			if(Iter->GetDriveType() == wxFS_VOL_DISK)
+//				strName = strName + wxT("   ") + Iter->GetDriveSpace();
+//
 			dispColor = m_colDrive;
 		}
 		else if (isDir)
@@ -1577,7 +1613,33 @@ void CFileListView::DisplayItems(wxDC* pDC)
 				pDC->DrawLabel(strDesc, posInfo.m_typeNameRect, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
 			}
 		}
+#ifdef __WXMSW__
+		else
+		{
+			wxFSVolumeKind fsvKind = Iter->GetDriveType();
+			if(fsvKind == wxFS_VOL_DISK || fsvKind == wxFS_VOL_NETWORK)
+			{
+				strName = Iter->GetDriveSpace();
+				wxString strMaxDriveName = theDriveInfo->GetMaxDriveDisp();
+				wxSize szDriveMax = pDC->GetTextExtent(strMaxDriveName);
 
+				int x1 = posInfo.m_iconRect.GetRight() + szDriveMax.GetWidth() + GAP_WIDTH * 20;
+				int y1 = posInfo.m_nameRect.GetTop();
+				int x2 = x1 + szDriveMax.GetWidth() +5;
+				int y2 = posInfo.m_nameRect.GetBottom();
+
+				wxRect rcDrive;
+
+				rcDrive.SetLeft(x1);
+				rcDrive.SetTop(y1);
+				rcDrive.SetRight(x2);
+				rcDrive.SetBottom(y2);
+
+				pDC->SetTextForeground(m_iCurrentItemIndex == iIndex ? dispColor : m_colDrive);
+				pDC->DrawLabel(strName, rcDrive, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
+			}
+		}
+#endif
 		if (bSelected)
 		{	//아이템이 선택되었을때 선택표시를 Polygon으로 처리(▶)
 			wxPoint ptSel[3];
@@ -1871,25 +1933,10 @@ wxString CFileListView::CalcStrEllipse(wxDC* pDC, const wxString& strSrc, bool I
 	int iDispWidth = IsDrive ? posInfo.m_mainRect.GetWidth() - 35 : posInfo.m_nameRect.GetWidth();
 	int iNameWidth = szNameSize.GetWidth();
 
-//	int iLen = strName.Len();
 	strDisp = theDCUtil->EllipseStr(pDC, strName, iDispWidth);
 
 	if (iNameWidth > iDispWidth)
 		m_dispNameInfoMap.insert(std::make_pair(strKey, strDisp));
-
-//		for (int iIndex = 0; iIndex < iLen; iIndex++)
-//		{
-//			strDisp = strName.Left(iIndex + 1);
-//			wxSize sizeText = pDC->GetTextExtent(wxString(strDisp + wxT("...")));
-//
-//			if ((sizeText.GetWidth()) > iDispWidth)
-//			{
-//				strDisp = strName.Left(iIndex);
-//				break;
-//			}
-//		}
-//
-//		strDisp += wxT("...");
 
 	return strDisp;
 }
@@ -2022,6 +2069,9 @@ void CFileListView::SelectedItemsClear(bool bDeleted)
 
 void CFileListView::StopFileImageRead()
 {
+    std::queue<size_t> empty;
+    std::swap( m_taskQueue, empty );
+
 	m_bFileImageInfoReadStarted = false;
 	//실행중인 쓰레드가 종료되길 기다린다.
 	if(GetThread() && GetThread()->IsRunning())
@@ -2049,12 +2099,49 @@ bool CFileListView::RunFileImageInfoRead()
 
 wxThread::ExitCode CFileListView::Entry()
 {
-	int iStartIndex = m_iStartIndex;
+	int iStartIndex = 0;
 	int iPosIndex = 0;
 
 	int iIconIndex = 0;
-	int iOverlayIconIndex = 0;
+    int iOverlayIconIndex = 0;
 
+    if(iStartIndex != m_iStartIndex)
+    {
+        iPosIndex = m_iCurrentItemIndex % m_iDisplayItemInView;
+        iStartIndex = m_iStartIndex;
+    }
+
+    while(true)
+    {
+        if(!m_bFileImageInfoReadStarted)
+			break;
+
+        if (m_taskQueue.empty())
+            break;
+
+        size_t targetIdx = 0;
+        targetIdx = m_taskQueue.front();
+        m_taskQueue.pop();
+
+        std::vector<CNextMDirData>::iterator it = m_itemList.begin() + targetIdx;
+
+        if(it->IsSetImageIcon())
+            continue;
+
+        theImageList->GetIconIndex(it->GetFullPath(), iIconIndex, iOverlayIconIndex);
+		it->SetIconIndex(iIconIndex, iOverlayIconIndex);
+		it->SetImageIconFlag(true);
+
+		int iPositionSize = m_posList.size();
+		if((iPositionSize > 0) && (iPosIndex < iPositionSize) )
+		{
+			std::vector<CPositionInfo>::const_iterator posIterator = m_posList.begin() + iPosIndex;
+			theDCUtil->Refresh(this, posIterator->m_iconRect);
+
+			iPosIndex++;
+		}
+    }
+    /*
 	for(int iIndex = 0; iIndex < m_iTotalItems; iIndex++)
 	{
 		std::vector<CNextMDirData>::iterator it = m_itemList.begin() + iIndex;
@@ -2086,13 +2173,12 @@ wxThread::ExitCode CFileListView::Entry()
 			iPosIndex++;
 		}
 	}
-
+    */
 	if(m_bFileImageInfoReadStarted)
 		theDCUtil->Refresh(this, m_viewRect);
 
 	return (wxThread::ExitCode)0;
 }
-
 
 void CFileListView::OnShowContextMenu(wxCommandEvent& event)
 {
@@ -2802,5 +2888,4 @@ HGLOBAL CFileListView::CopySelection()
 	GlobalUnlock(hMem);
 	return hMem;
 }
-
 #endif
