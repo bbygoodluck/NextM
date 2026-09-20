@@ -435,5 +435,4 @@ protected:
 
 	wxDECLARE_EVENT_TABLE();
 };
-
 #endif // FILELISTVIEW_H_INCLUDED
