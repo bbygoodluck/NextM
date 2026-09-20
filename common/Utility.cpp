@@ -1,5 +1,8 @@
 #include "common.h"
 #include "Utility.h"
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 std::unique_ptr<CUtility> CUtility::m_pInstance(nullptr);
 
@@ -593,6 +596,20 @@ wxString CUtility::sec_to_dhms(size_t seconds, bool no_days, bool no_seconds)
 					+ (not no_seconds ? ":" + wxString(std::cmp_less(seconds, 10) ? "0" : "") + std::to_string(seconds) : "");
 
 	return strout;
+}
+
+bool CUtility::MextMAccess(const wxString& strPath)
+{
+	fs::path p(strPath.wc_str());
+	bool ok = fs::exists(p);
+
+	if(!ok)
+		return false;
+
+	auto perms = fs::status(p).permissions();
+	bool writable = (perms & fs::perms::owner_write) != fs::perms::none;
+
+	return writable;
 }
 
 #ifdef __WXMSW__

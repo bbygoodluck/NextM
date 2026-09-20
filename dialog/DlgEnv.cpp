@@ -832,6 +832,7 @@ void DlgEnv::DoApply()
 	int iFontSize = m_spinFontSize->GetValue();
 
 	wxString strBeforeFontName = _gViewFont->GetFaceName();
+	bool bUpdateFontForView = false;
 	if (strBeforeFontName.Cmp(strFontName) != 0)
 	{
 		theConfig->SetChangeGlobalVal(wxT("fontname"), strFontName);
@@ -840,6 +841,7 @@ void DlgEnv::DoApply()
 		wxDELETE(_gViewFont);
 
 		_gViewFont = new wxFont(iFontSize, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, strFontName);
+		bUpdateFontForView = true;
 	}
 
 	int iExtPGCount = m_lstExternalPG->GetItemCount();
@@ -860,6 +862,9 @@ void DlgEnv::DoApply()
 
 		theExternal->ResetExternalProgram(_vecPgs);
 	}
+
+	if(bUpdateFontForView)
+		theSettingUpdate->UpdateFontForView();
 }
 
 void DlgEnv::DoApplyColorInfo()

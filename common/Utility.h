@@ -116,6 +116,7 @@ public:
 	wxString floating_humanizer(uint64_t value, const bool is_mega = false, const bool shorten = false, size_t start = 0, const bool bit = false, const bool per_second = false);
 
 	wxString sec_to_dhms(size_t seconds, bool no_days, bool no_seconds);
+	bool MextMAccess(const wxString& strPath);
 
 private:
 	void SetWorkingDirectory();

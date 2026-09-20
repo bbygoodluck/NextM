@@ -357,7 +357,7 @@ public:
 
 private:
 	wxRect m_rc;
-	float m_fSpeed;
+	float m_fSpeed = 6.0f;
 
 	int _xPos = 0;
 	int _yPos = 0;

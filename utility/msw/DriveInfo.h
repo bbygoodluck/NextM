@@ -28,6 +28,9 @@ public:
 
 	void SetMaxDriveName(wxWindow* pWindow, wxFont& font);
 	bool IsSetMaxDriveName() { return m_bIsMaxDriveName; }
+	wxString GetMaxDriveSize() const { return m_strMaxDriveSize; }
+
+	unsigned int GetSizeFormatIndex() const { return m_nFormatIndex; }
 private:
 	wxString MakeDisplayName(const wxString& strVolume, const wxString& strVolumeDisplayName, bool IsNetDrive);
 
@@ -38,6 +41,9 @@ private:
 	wxString m_strMaxDisp = wxT("");
 	bool m_bIsMaxDriveName = false;
 	int m_nDriveCount = 0;
+
+	unsigned int m_nFormatIndex = 0;
+	wxString m_strMaxDriveSize = wxT("");
 };
 
 #endif // DRIVEINFO_H_INCLUDED

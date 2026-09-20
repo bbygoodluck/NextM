@@ -168,89 +168,15 @@ void CLocalFileSystem::EndFindFiles()
 
 bool CLocalFileSystem::IsFileWritePermission(const wxString& strFullPathFileName)
 {
-//	int                  result      = NONFATAL;
-/*    SECURITY_INFORMATION sec_info    = 0;
-    unsigned int         desc_length = 0;
-    unsigned char *      psec_desc   = NULL;
-
-	sec_info |= OWNER_SECURITY_INFORMATION;
-    sec_info |= GROUP_SECURITY_INFORMATION;
-    sec_info |= DACL_SECURITY_INFORMATION;
-
-	bool bSecurity = GetFileSecurity(CONVSTR(strFullPathFileName), sec_info, NULL, 0, &desc_length);
-	if(!bSecurity)
-		return false;
-
-	return true;
-*/
-/*
-#ifdef __WXMSW__
-	DWORD dwAttr = GetFileAttributes(strFullPathFileName);
-	DWORD dwDesiredAccess = GENERIC_READ;
-	DWORD dwFlagsAndAttr = 0;
-
-	if(dwAttr == FILE_ATTRIBUTE_DIRECTORY)
-	{
-		dwDesiredAccess = FILE_GENERIC_READ;
-		dwFlagsAndAttr = FILE_FLAG_BACKUP_SEMANTICS;
-	}
-
-	if(dwAttr == (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_ARCHIVE))
-		return true;
-
-	HANDLE hFile = INVALID_HANDLE_VALUE;
-
-    hFile = CreateFile(CONVSTR(strFullPathFileName),
-					   dwDesiredAccess,
-                       0,
-                       NULL,
-                       OPEN_EXISTING,
-                       dwFlagsAndAttr,
-                       NULL);
-
-	DWORD dwErr = GetLastError();
-    if (hFile == INVALID_HANDLE_VALUE)
-	{
-		CloseHandle(hFile);
-		dwErr = GetLastError();
-		if(dwErr == 0x0020) //다른 프로세스에서 이 파일을 사용하고 있기 때문에 이 파일을 액세스할 수 없습니다.(잘라내기가 아닌경우 체크)
-			return true;
-
-		return false;
-	}
-
-    CloseHandle(hFile);
-    return true;
-#else
-
-#endif
-*/
-/*	std::fstream fs;
-	fs.open(CONVSTR(strFullPathFileName), std::ios::app | std::ios::binary);
-
-	if(!fs.is_open())
-		return false;
-
-	fs.close();
-*/
-/*
-	FILE* f;
-	f = fopen(strFullPathFileName.c_str(), "ra");
-	if(f == nullptr)
-		return false;
-
-	fclose(f);
-*/
-
-	int iMode = R_OK | W_OK;
-	int iRet = 0;
-	iRet = access(strFullPathFileName.c_str(), iMode);
-	if(iRet == -1)
-		return false;
-
-	return true;
-//	bool bRet = bWrite ? wxIsWritable(strFullPathFileName) : wxIsReadable(strFullPathFileName);
-//	return bRet;
+//	int iMode = R_OK | W_OK;
+//	int iRet = 0;
+//	iRet = access(strFullPathFileName.c_str(), iMode);
+//
+	bool bRet = theUtility->MextMAccess(strFullPathFileName);
+	return bRet;
+//	if(iRet == -1)
+//		return false;
+//
 //	return true;
 }
 

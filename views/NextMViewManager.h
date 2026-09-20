@@ -26,6 +26,7 @@ public:
 	CPathView* GetPathView();
 	CViewsPanel* GetCurrentViewsPanels();
 
+	CNextMAuiNotebook* GetAuiNotebook() const { return m_pAuiNotebook.get(); }
 #ifdef __WXMSW__
 	void MSWDiskDriveInit();
 	void MSWUpdateDriveSize(const wxString& strVolume);

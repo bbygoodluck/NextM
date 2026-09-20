@@ -42,6 +42,10 @@ public:
 	//Tab키 입력시 포커스 이동
 	void ChangeSplitView();
 	//디스크 드라이브 추가/삭제시
+
+	bool IsSplit() {
+		return m_pSpliiterWnd->IsSplit();
+	}
 #ifdef __WXMSW__
 	void MSWDiskDriveInit();
 	void MSWUpdateDriveSize(const wxString& strVolume);

@@ -118,7 +118,6 @@
 #include "../utility/DCUtility.h"
 #define theDCUtil (CDCUtility::Get())
 
-
 #include "../interface/NextMNCD.h"
 //디렉토리관리
 #define theNCD              (CNextMNCD::Get())
@@ -130,4 +129,8 @@
 //시스템관련
 #include "../system/System.h"
 #define theSystem           (CSystem::Get())
+
+//환경설정 갱신
+#include "SettingsUpdate.h"
+#define theSettingUpdate    (CSettingsUpdate::Get())
 #endif // COMMON_H_INCLUDED

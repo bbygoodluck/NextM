@@ -93,6 +93,14 @@ void CDriveInfo::GetDiskSpace(const wxString& strVolume, double& dblTotalSpace, 
 
 		dblTotalSpace = total.ToDouble();
 		dblFreeSpace = free.ToDouble();
+
+		wxString strDriveSize = wxString::Format(wxT("%.1f"), (dblTotalSpace / GIGABYTE));
+
+		if(m_strMaxDriveSize.Len() < strDriveSize.Len())
+		{
+			m_strMaxDriveSize = strDriveSize;
+			m_nFormatIndex = m_strMaxDriveSize.Len();
+		}
 	}
 	else
 	{

@@ -113,6 +113,8 @@ public:
 	bool FindItemInMousePoint(const wxPoint& pt, bool IsMouseMove = false);
 	void SetDnDUpdate();
 
+	void ChangeViewFont();
+
 protected:
 	virtual void GotoTopDir() = 0;
 

@@ -93,7 +93,7 @@ CFileListView::CFileListView(wxWindow* parent, const int nID, const wxSize& sz)
 	m_pTxtCtrlForRename = std::make_unique<wxTextCtrl>(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER | wxBORDER_THEME);
 	m_pTxtCtrlForRename->SetBackgroundColour(wxColour(220, 220, 220));
 
-	m_pTxtCtrlForRename->SetFont(m_viewFont);
+	m_pTxtCtrlForRename->SetFont(*_gViewFont);//m_viewFont);
 	m_pTxtCtrlForRename->Show(false);
 
 	m_pTxtCtrlForRename->Connect(wxEVT_KEY_DOWN, wxKeyEventHandler(CFileListView::OnKeyDownTextCtrl), NULL, this);
@@ -845,7 +845,7 @@ void CFileListView::OnPaint(wxPaintEvent& event)
     m_viewRect = GetClientRect();
 	wxMemoryDC* pMemDC = m_memDC.CreateMemoryDC(&dc, m_viewRect, m_colBackground, m_colBackground);
 
-    pMemDC->SetFont(m_viewFont);
+    pMemDC->SetFont(*_gViewFont);//m_viewFont);
 	Render(pMemDC);
 
 	dc.Blit(0, 0, m_viewRect.GetWidth(), m_viewRect.GetHeight(), pMemDC, 0, 0);
@@ -1834,7 +1834,7 @@ void CFileListView::DisplayDirInfo(wxDC* pDC)
 	pDC->SetTextForeground(wxColour(255, 255, 255));
 	pDC->DrawLabel(strUsed, rcDiskSpace, wxALIGN_CENTER);
 
-	pDC->SetFont(m_viewFont);
+	pDC->SetFont(*_gViewFont);//m_viewFont);
 }
 
 void CFileListView::DrawInfoArea(wxDC* pDC)
@@ -1908,7 +1908,7 @@ void CFileListView::DisplayDetailInfo(wxDC* pDC, const CNextMDirData& data, int 
 	pDC->SetTextForeground(wxColour(0, 0, 0));
 	pDC->DrawText(strDetailInfo, m_viewRectDetail.GetLeft() + 22, m_viewRectDetail.GetTop() + 3);
 
-	pDC->SetFont(m_viewFont);
+	pDC->SetFont(*_gViewFont);//m_viewFont);
 }
 
 wxString CFileListView::CalcStrEllipse(wxDC* pDC, const wxString& strSrc, bool IsDrive)
@@ -2889,3 +2889,9 @@ HGLOBAL CFileListView::CopySelection()
 	return hMem;
 }
 #endif
+
+void CFileListView::ChangeViewFont()
+{
+	m_viewFont = *_gViewFont;
+	m_pTxtCtrlForRename->SetFont(*_gViewFont);
+}
